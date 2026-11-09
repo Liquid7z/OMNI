@@ -6,3 +6,11 @@ yarn-error.log*
 Thumbs.db
 *.log
 
+# Sensitive credentials & cookies (Never commit)
+cookies/
+*cookies*.txt
+cookies.txt
+.env
+.env.*
+
+

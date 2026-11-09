@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>OMNI — Universal Video & Audio Downloader</title>
   <meta name="description" content="Download high-resolution video and lossless audio from YouTube, Instagram, Terabox, TikTok, Facebook, Twitter, Spotify and more.">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230c0c0c%22/><polygon points=%2240,30 70,50 40,70%22 fill=%22%23ffffff%22/></svg>">
 
   <!-- Editorial Typography & Modern Grotesque -->
@@ -136,6 +136,12 @@
         </button>
       </div>
 
+      <!-- Live Reddit Auth Status Indicator -->
+      <div class="reddit-auth-bar" id="redditAuthBar" style="display:none;">
+        <span class="auth-dot" id="redditAuthDot"></span>
+        <span class="auth-text" id="redditAuthText">Reddit Cookies: Active</span>
+      </div>
+
       <!-- Quick Platform Demo Chips -->
       <div class="demo-chips">
         <span class="chip-label">Quick Test:</span>
@@ -200,9 +206,9 @@
             <span class="media-duration-tag" id="mediaDurationTag">03:42</span>
           </div>
           <div class="media-meta">
-            <span class="detected-badge" id="detectedPlatformBadge">YOUTUBE 4K</span>
-            <h3 class="media-title" id="mediaTitle">Synthwave Chill Odyssey 2026 (Ultra HD 60fps)</h3>
-            <p class="media-uploader" id="mediaUploader">Channel: Neon Beats Studio • 1.2M Views</p>
+            <span class="detected-badge" id="detectedPlatformBadge">MEDIA STREAM</span>
+            <h3 class="media-title" id="mediaTitle">Media Ready to Download</h3>
+            <p class="media-uploader" id="mediaUploader">Select your preferred format below</p>
           </div>
         </div>
 
@@ -214,76 +220,70 @@
 
         <!-- Video Downloads Table -->
         <div class="format-content active" id="videoTabContent">
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">4K Ultra HD</span>
-              <span class="q-codec">2160p • 60fps • HDR • MP4</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">148.4 MB</span>
-              <button class="action-dl-btn" data-type="video" data-quality="4K_2160p">Download</button>
-            </div>
-          </div>
-
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">1080p Full HD</span>
-              <span class="q-codec">1080p • 60fps • MP4</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">48.2 MB</span>
-              <button class="action-dl-btn" data-type="video" data-quality="1080p_FHD">Download</button>
-            </div>
-          </div>
-
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">720p HD</span>
-              <span class="q-codec">720p • 30fps • Fast • MP4</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">21.5 MB</span>
-              <button class="action-dl-btn" data-type="video" data-quality="720p_HD">Download</button>
-            </div>
-          </div>
         </div>
 
         <!-- Audio Downloads Table -->
         <div class="format-content" id="audioTabContent" style="display:none;">
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">MP3 Audio (HQ)</span>
-              <span class="q-codec">320 kbps • Constant Bitrate • Stereo</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">9.2 MB</span>
-              <button class="action-dl-btn" data-type="audio" data-quality="MP3_320k">Download</button>
-            </div>
-          </div>
+        </div>
 
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">Lossless FLAC</span>
-              <span class="q-codec">24-bit • 48 kHz • Studio Master</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">28.4 MB</span>
-              <button class="action-dl-btn" data-type="audio" data-quality="FLAC_Lossless">Download</button>
-            </div>
-          </div>
+      </div>
 
-          <div class="quality-item">
-            <div class="q-left">
-              <span class="q-res">M4A Audio</span>
-              <span class="q-codec">256 kbps AAC • Apple Compatible</span>
-            </div>
-            <div class="q-right">
-              <span class="q-size">6.8 MB</span>
-              <button class="action-dl-btn" data-type="audio" data-quality="M4A_256k">Download</button>
-            </div>
+      <!-- Real-Time Download Progress State -->
+      <div class="modal-download-progress-state" id="modalProgressState" style="display:none;">
+        <div class="progress-badge-wrap">
+          <span class="progress-badge" id="progressBadge">DOWNLOADING MP4</span>
+        </div>
+        <div class="progress-spinner-wrap">
+          <div class="spinner-ring" id="progressSpinner"></div>
+        </div>
+        <h3 class="progress-title" id="progressTitle">Starting Download Stream...</h3>
+        <p class="progress-desc" id="progressDesc">Retrieving media chunks from high-speed stream server...</p>
+        
+        <div class="progress-track-container">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-stats-row">
+          <span class="progress-stat-percent" id="progressPercent">0%</span>
+          <span class="progress-stat-size" id="progressSize">Connecting...</span>
+        </div>
+        
+        <div class="progress-cancel-wrap">
+          <button class="progress-cancel-btn" id="progressCancelBtn" type="button">Cancel Transfer</button>
+        </div>
+      </div>
+
+      <!-- Premium Classified Error State -->
+      <div class="modal-error-state" id="modalErrorState" style="display:none;">
+        <div class="error-badge-row">
+          <span class="error-category-badge" id="errorBadge">EXTRACTION NOTICE</span>
+        </div>
+        <div class="error-icon-circle" id="errorIconCircle">
+          <span class="error-icon" id="errorIcon">⚠️</span>
+        </div>
+        <h3 class="error-title" id="errorTitle">Unable to Extract Media</h3>
+        <p class="error-description" id="errorDescription">
+          Please ensure the link is public, accessible, and contains media.
+        </p>
+
+        <div class="error-solution-box" id="errorSolutionBox">
+          <div class="solution-header">
+            <span class="solution-sparkle">💡</span>
+            <span class="solution-title">Suggested Action:</span>
+          </div>
+          <div class="solution-text" id="errorSolutionText">
+            Verify the URL in your browser or try pasting a different link.
           </div>
         </div>
 
+        <div class="error-actions-row">
+          <button class="error-retry-btn" id="errorRetryBtn" type="button" style="display:none;">
+            <span class="retry-icon">🔄</span>
+            <span id="errorRetryText">Retry</span>
+          </button>
+          <button class="error-another-btn" id="errorAnotherBtn" type="button">
+            Try Another Link
+          </button>
+        </div>
       </div>
     </div>
   </div>

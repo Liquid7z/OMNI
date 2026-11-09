@@ -3,6 +3,24 @@
  * Interactive 3D Vinyl Experience for Multi-Platform Video & Audio Ripping
  */
 
+// Format utilities for client-side download streamer and stats
+function formatBytes(bytes, decimals = 1) {
+  if (!bytes || bytes <= 0) return '0 B';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return '00:00';
+  const sec = Math.round(seconds);
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
 // --------------------------------------------------------------------------
 // 1. Platform Catalog Dataset
 // --------------------------------------------------------------------------
@@ -198,10 +216,10 @@ const PLATFORMS = [
     color: '#ff4500',
     accentColor: '#ffffff',
     placeholder: 'Paste Reddit post link (reddit.com/r/...)',
-    sampleUrl: 'https://www.reddit.com/r/interestingasfuck/comments/xyz123/',
-    sampleTitle: 'Rare Golden Eagle Catching Fish in Slow Motion 4K',
-    sampleUploader: 'r/interestingasfuck • 64K Upvotes',
-    sampleDuration: '00:45',
+    sampleUrl: 'https://www.reddit.com/r/funny/comments/1xqv37k/my_cat_watching_the_birds/',
+    sampleTitle: 'My cat watching the birds outside',
+    sampleUploader: 'r/funny',
+    sampleDuration: '00:00',
     reviews: [
       { publication: 'REDDITOR REVIEW', quote: '“FINALLY AUDIO AND VIDEO MERGED IN SYNC”' },
       { publication: 'THE NEXT WEB', quote: '“SOLVES THE DREADED V.REDD.IT ISSUE”' }
@@ -218,10 +236,10 @@ const PLATFORMS = [
     color: '#e60023',
     accentColor: '#ffffff',
     placeholder: 'Paste Pinterest Pin link...',
-    sampleUrl: 'https://pin.it/7a8b9c0d',
-    sampleTitle: 'Modern Minimalist Architectural Living Room Tour',
-    sampleUploader: 'ArchDigest Pins • 120K Saves',
-    sampleDuration: '00:38',
+    sampleUrl: 'https://www.pinterest.com/pin/1149403436154631720/',
+    sampleTitle: 'Aesthetic High-Res Wallpaper',
+    sampleUploader: 'Pinterest Creator',
+    sampleDuration: '00:00',
     reviews: [
       { publication: 'CREATIVE BLOQ', quote: '“SAVE DESIGN IDEAS IN HIGHEST RESOLUTION”' },
       { publication: 'DESIGN MILK', quote: '“CRYSTAL CLEAR VIDEO PIN DOWNLOADS”' }
@@ -582,6 +600,80 @@ const mediaUploader = document.getElementById('mediaUploader');
 const mediaDurationTag = document.getElementById('mediaDurationTag');
 const modalThumbCanvas = document.getElementById('modalThumbCanvas');
 const toastNotification = document.getElementById('toastNotification');
+const redditAuthBar = document.getElementById('redditAuthBar');
+const redditAuthDot = document.getElementById('redditAuthDot');
+const redditAuthText = document.getElementById('redditAuthText');
+
+// Real-Time Download Progress & Error State DOM Elements
+const modalProgressState = document.getElementById('modalProgressState');
+const progressBadge = document.getElementById('progressBadge');
+const progressTitle = document.getElementById('progressTitle');
+const progressDesc = document.getElementById('progressDesc');
+const progressBarFill = document.getElementById('progressBarFill');
+const progressPercent = document.getElementById('progressPercent');
+const progressSize = document.getElementById('progressSize');
+const progressCancelBtn = document.getElementById('progressCancelBtn');
+
+const modalErrorState = document.getElementById('modalErrorState');
+const errorBadge = document.getElementById('errorBadge');
+const errorIcon = document.getElementById('errorIcon');
+const errorTitle = document.getElementById('errorTitle');
+const errorDescription = document.getElementById('errorDescription');
+const errorSolutionBox = document.getElementById('errorSolutionBox');
+const errorSolutionText = document.getElementById('errorSolutionText');
+const errorRetryBtn = document.getElementById('errorRetryBtn');
+const errorRetryText = document.getElementById('errorRetryText');
+const errorAnotherBtn = document.getElementById('errorAnotherBtn');
+
+let activeDownloadController = null;
+let currentRetryCount = 0;
+let retryCountdownInterval = null;
+const MAX_RETRY_ATTEMPTS = 3;
+
+function setModalState(state) {
+  if (modalLoading) modalLoading.style.display = state === 'LOADING' ? 'flex' : 'none';
+  if (modalReady) modalReady.style.display = state === 'READY' ? 'block' : 'none';
+  if (modalProgressState) modalProgressState.style.display = state === 'PROGRESS' ? 'flex' : 'none';
+  if (modalErrorState) modalErrorState.style.display = state === 'ERROR' ? 'flex' : 'none';
+}
+
+let cachedRedditAuth = null;
+async function fetchRedditAuthStatus() {
+  try {
+    const res = await fetch('/api/reddit-status');
+    cachedRedditAuth = await res.json();
+    updateRedditAuthIndicator(currentIndex);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function updateRedditAuthIndicator(platformIndex) {
+  if (!redditAuthBar) return;
+  const platform = PLATFORMS[platformIndex];
+  const urlVal = (urlInput?.value || '').toLowerCase();
+  const isReddit = (platform && platform.id === 'reddit') || urlVal.includes('reddit.com') || urlVal.includes('v.redd.it');
+
+  if (!isReddit) {
+    redditAuthBar.style.display = 'none';
+    return;
+  }
+
+  redditAuthBar.style.display = 'inline-flex';
+  if (!cachedRedditAuth || !cachedRedditAuth.configured) {
+    redditAuthDot.className = 'auth-dot red';
+    redditAuthText.textContent = '🔒 Reddit: No cookies loaded (Guest mode)';
+    return;
+  }
+
+  if (cachedRedditAuth.hasSessionAuth) {
+    redditAuthDot.className = 'auth-dot green';
+    redditAuthText.textContent = `🔒 Reddit Cookies: Authenticated Account Session`;
+  } else {
+    redditAuthDot.className = 'auth-dot amber';
+    redditAuthText.textContent = `🔒 Reddit Cookies: Active (${cachedRedditAuth.validCookies || 6} cookies • Guest Session)`;
+  }
+}
 
 let currentIndex = 0;
 
@@ -657,6 +749,8 @@ function updateUI(platformIndex) {
   items.forEach((item, idx) => {
     item.classList.toggle('active', idx === platformIndex);
   });
+
+  updateRedditAuthIndicator(platformIndex);
 }
 
 // --------------------------------------------------------------------------
@@ -1031,6 +1125,7 @@ function detectPlatformFromUrl(url) {
 // Live URL auto-detection on input
 urlInput.addEventListener('input', () => {
   const val = urlInput.value.trim();
+  updateRedditAuthIndicator(currentIndex);
   if (!val) return;
   const detectedId = detectPlatformFromUrl(val);
   const foundIndex = PLATFORMS.findIndex(p => p.id === detectedId);
@@ -1083,23 +1178,29 @@ demoChips.forEach(chip => {
 // Download Button Click
 downloadBtn.addEventListener('click', () => {
   const currentPlatform = PLATFORMS[currentIndex];
-  triggerMediaAnalysis(urlInput.value, currentPlatform);
+  const inputVal = (urlInput.value || '').trim();
+  if (!inputVal) {
+    showToast('⚠️ Please paste a video or audio link to download');
+    urlInput.focus();
+    return;
+  }
+  triggerMediaAnalysis(inputVal, currentPlatform);
 });
 
-// Real Extraction Analysis via Server API
+// Real Extraction Analysis via Server API with Full Classification & Recovery
 async function triggerMediaAnalysis(targetUrl, fallbackPlatform) {
-  const urlToFetch = (targetUrl || urlInput.value || '').trim() || fallbackPlatform?.sampleUrl;
+  const urlToFetch = (targetUrl || urlInput.value || '').trim();
   if (!urlToFetch) {
     showToast('⚠️ Please paste a valid video or audio URL');
+    urlInput.focus();
     return;
   }
 
   activeTargetUrl = urlToFetch;
   downloadModal.classList.add('open');
-  modalLoading.style.display = 'flex';
-  modalReady.style.display = 'none';
+  setModalState('LOADING');
 
-  loadingStatusText.textContent = `Connecting to stream server for ${urlToFetch.slice(0, 40)}...`;
+  loadingStatusText.textContent = `Analyzing stream metadata for ${urlToFetch.slice(0, 45)}...`;
 
   // Draw initial fallback thumbnail canvas
   const thumbCtx = modalThumbCanvas.getContext('2d');
@@ -1124,15 +1225,113 @@ async function triggerMediaAnalysis(targetUrl, fallbackPlatform) {
     const data = await res.json();
 
     if (data && data.success) {
+      currentRetryCount = 0;
       activeMediaData = data;
+      setModalState('READY');
       renderRealMediaInfo(data);
     } else {
-      renderFallbackMediaInfo(fallbackPlatform || PLATFORMS[currentIndex]);
+      renderClassifiedError(data?.classification || data?.error, data, urlToFetch, () => {
+        triggerMediaAnalysis(urlToFetch, fallbackPlatform);
+      });
     }
   } catch (err) {
-    console.warn('Stream server error, using high-speed fallback:', err);
-    renderFallbackMediaInfo(fallbackPlatform || PLATFORMS[currentIndex]);
+    console.warn('Stream server error:', err);
+    renderClassifiedError(err.message, { error: err.message }, urlToFetch, () => {
+      triggerMediaAnalysis(urlToFetch, fallbackPlatform);
+    });
   }
+}
+
+/**
+ * Premium Classified Error Renderer
+ * Displays accurate category badge, clear icons, friendly plain-language titles,
+ * helpful descriptions, actionable suggestions, and a timed Retry button.
+ */
+function renderClassifiedError(classification, rawData, currentUrl, retryCallback) {
+  // Clear any existing countdown interval
+  if (retryCountdownInterval) {
+    clearInterval(retryCountdownInterval);
+    retryCountdownInterval = null;
+  }
+
+  setModalState('ERROR');
+
+  const c = (typeof classification === 'object' && classification !== null)
+    ? classification
+    : {
+        category: 'UNKNOWN_ERROR',
+        badge: 'EXTRACTION NOTICE',
+        icon: '⚠️',
+        title: 'Extraction Could Not Complete',
+        message: String(classification || 'Unable to parse media stream from this link.'),
+        solution: 'Please check that the link is public, accessible, and contains media.',
+        canRetry: true,
+        retryDelayMs: 3000
+      };
+
+  errorBadge.textContent = c.badge || 'ERROR';
+  errorIcon.textContent = c.icon || '⚠️';
+  errorTitle.textContent = c.title || 'Unable to Extract Media';
+  errorDescription.textContent = c.message || 'Please check that the link is public and contains media.';
+
+  // Build solution text with optional official guide link
+  let solHtml = c.solution || 'Verify the link in your browser or try another link.';
+  if (c.officialGuide) {
+    solHtml += ` <br><a href="${c.officialGuide}" target="_blank" rel="noopener" style="color: #0070f3; text-decoration: underline; margin-top: 0.35rem; display: inline-block;">Official Cookies & Access Guide ↗</a>`;
+  }
+  errorSolutionText.innerHTML = solHtml;
+
+  // Retry handling with exponential backoff & countdown
+  const canRetry = Boolean(c.canRetry) && currentRetryCount < MAX_RETRY_ATTEMPTS;
+  if (canRetry) {
+    errorRetryBtn.style.display = 'inline-flex';
+    errorRetryBtn.disabled = false;
+
+    // Exponential backoff: 3s, 4.5s, 6.7s etc.
+    let remainingSec = Math.max(1, Math.round(((c.retryDelayMs || 3000) * Math.pow(1.5, currentRetryCount)) / 1000));
+    errorRetryText.textContent = `Retry (${remainingSec}s)`;
+
+    retryCountdownInterval = setInterval(() => {
+      remainingSec--;
+      if (remainingSec > 0) {
+        errorRetryText.textContent = `Retry (${remainingSec}s)`;
+      } else {
+        clearInterval(retryCountdownInterval);
+        retryCountdownInterval = null;
+        errorRetryText.textContent = 'Retry Now';
+      }
+    }, 1000);
+
+    errorRetryBtn.onclick = () => {
+      if (retryCountdownInterval) {
+        clearInterval(retryCountdownInterval);
+        retryCountdownInterval = null;
+      }
+      currentRetryCount++;
+      errorRetryBtn.disabled = true;
+      errorRetryText.textContent = 'Retrying...';
+      if (typeof retryCallback === 'function') {
+        retryCallback();
+      } else {
+        triggerMediaAnalysis(currentUrl || activeTargetUrl);
+      }
+    };
+  } else {
+    errorRetryBtn.style.display = 'none';
+  }
+
+  // Graceful Recovery: "Try Another Link" preserves URL, selects it, and closes modal
+  errorAnotherBtn.onclick = () => {
+    if (retryCountdownInterval) {
+      clearInterval(retryCountdownInterval);
+      retryCountdownInterval = null;
+    }
+    currentRetryCount = 0;
+    downloadModal.classList.remove('open');
+    setModalState('READY');
+    urlInput.focus();
+    urlInput.select();
+  };
 }
 
 function renderRealMediaInfo(data) {
@@ -1150,16 +1349,44 @@ function renderRealMediaInfo(data) {
     modalThumbCanvas.style.display = 'none';
   }
 
+  // Tab label handling (e.g. Photo vs Video)
+  const vTab = document.querySelector('[data-tab="video"]');
+  const aTab = document.querySelector('[data-tab="audio"]');
+  const isPhotoOnly = data.videoFormats && data.videoFormats.every(f => f.ext === 'jpg' || f.ext === 'png' || f.ext === 'jpeg' || f.fps === 0);
+
+  if (vTab) {
+    vTab.textContent = isPhotoOnly ? '🖼️ Photo / Image (HQ)' : '🎬 Video (MP4)';
+    vTab.classList.add('active');
+  }
+
+  if (aTab) {
+    if (!data.audioFormats || data.audioFormats.length === 0) {
+      aTab.style.display = 'none';
+    } else {
+      aTab.style.display = 'inline-flex';
+      aTab.textContent = '🎵 Audio (MP3 / FLAC)';
+      aTab.classList.remove('active');
+    }
+  }
+
+  videoTabContent.style.display = 'block';
+  audioTabContent.style.display = 'none';
+
   // Populate Real Video Formats
   videoTabContent.innerHTML = '';
   if (data.videoFormats && data.videoFormats.length > 0) {
     data.videoFormats.forEach(f => {
       const row = document.createElement('div');
       row.className = 'quality-item';
+      const isImg = f.ext === 'jpg' || f.ext === 'png' || f.ext === 'jpeg' || f.fps === 0;
+      const subLabel = isImg 
+        ? `${(f.ext || 'JPG').toUpperCase()} • Original Master Quality`
+        : `${f.resolution} • ${f.fps || 30}fps • ${(f.ext || 'MP4').toUpperCase()}`;
+
       row.innerHTML = `
         <div class="q-left">
           <span class="q-res">${f.label || f.resolution}</span>
-          <span class="q-codec">${f.resolution} • ${f.fps || 30}fps • MP4</span>
+          <span class="q-codec">${subLabel}</span>
         </div>
         <div class="q-right">
           <span class="q-size">${f.filesizeFormatted || 'Direct Stream'}</span>
@@ -1167,7 +1394,7 @@ function renderRealMediaInfo(data) {
         </div>
       `;
       row.querySelector('.action-dl-btn').addEventListener('click', () => {
-        executeDirectDownload(activeTargetUrl, f.selector, 'video', data.title, f.ext || 'mp4');
+        executeDirectDownload(activeTargetUrl, f.selector, 'video', data.title, f.ext || (isImg ? 'jpg' : 'mp4'));
       });
       videoTabContent.appendChild(row);
     });
@@ -1198,111 +1425,139 @@ function renderRealMediaInfo(data) {
 }
 
 function renderFallbackMediaInfo(platform) {
-  modalLoading.style.display = 'none';
-  modalReady.style.display = 'block';
-
-  detectedPlatformBadge.textContent = `${platform.title} • READY`;
-  mediaTitle.textContent = platform.sampleTitle;
-  mediaUploader.textContent = platform.sampleUploader;
-  mediaDurationTag.textContent = platform.sampleDuration;
-
-  modalThumbCanvas.style.display = 'block';
-  modalThumbImg.style.display = 'none';
-
-  // Render a clean preview card on fallback canvas
-  const ctx = modalThumbCanvas.getContext('2d');
-  ctx.fillStyle = '#0f1117';
-  ctx.fillRect(0, 0, 220, 130);
-  const grad = ctx.createLinearGradient(0, 0, 220, 130);
-  grad.addColorStop(0, platform.color || '#e60023');
-  grad.addColorStop(1, '#0a0a0c');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 220, 130);
-
-  // Draw play badge
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-  ctx.beginPath();
-  ctx.arc(110, 65, 24, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.moveTo(104, 53);
-  ctx.lineTo(122, 65);
-  ctx.lineTo(104, 77);
-  ctx.closePath();
-  ctx.fill();
-
-  // Fallback Video Options (Powered by high-speed direct streams)
-  videoTabContent.innerHTML = `
-    <div class="quality-item">
-      <div class="q-left">
-        <span class="q-res">1080p Full HD</span>
-        <span class="q-codec">1080p • 60fps • MP4</span>
-      </div>
-      <div class="q-right">
-        <span class="q-size">48 MB</span>
-        <button class="action-dl-btn" data-type="video" data-selector="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">Download</button>
-      </div>
-    </div>
-    <div class="quality-item">
-      <div class="q-left">
-        <span class="q-res">720p HD</span>
-        <span class="q-codec">720p • Fast • MP4</span>
-      </div>
-      <div class="q-right">
-        <span class="q-size">21 MB</span>
-        <button class="action-dl-btn" data-type="video" data-selector="https://www.w3schools.com/html/mov_bbb.mp4">Download</button>
-      </div>
-    </div>
-  `;
-
-  // Fallback Audio Options
-  audioTabContent.innerHTML = `
-    <div class="quality-item">
-      <div class="q-left">
-        <span class="q-res">MP3 Audio (HQ)</span>
-        <span class="q-codec">320 kbps • Constant Bitrate</span>
-      </div>
-      <div class="q-right">
-        <span class="q-size">8.9 MB</span>
-        <button class="action-dl-btn" data-type="audio" data-selector="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">Download</button>
-      </div>
-    </div>
-  `;
-
-  const targetToDownload = activeTargetUrl || platform.sampleUrl;
-  videoTabContent.querySelectorAll('.action-dl-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      executeDirectDownload(targetToDownload, btn.getAttribute('data-selector'), 'video', platform.sampleTitle, 'mp4');
-    });
-  });
-
-  audioTabContent.querySelectorAll('.action-dl-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      executeDirectDownload(targetToDownload, btn.getAttribute('data-selector'), 'audio', platform.sampleTitle, 'mp3');
-    });
-  });
+  renderClassifiedError({
+    category: 'EXTRACTION_NOTICE',
+    badge: 'MEDIA NOTICE',
+    icon: 'ℹ️',
+    title: 'No Media Stream Available',
+    message: 'Could not extract valid media streams for this link. Please check that the URL is public and valid.',
+    solution: 'Verify the link in your browser or paste a direct media URL.',
+    canRetry: false
+  }, {}, activeTargetUrl);
 }
 
-function executeDirectDownload(url, selector, type, title, ext) {
-  showToast(`⚡ Starting direct ${type.toUpperCase()} download stream...`);
-  const finalExt = ext || (type === 'audio' ? 'mp3' : 'mp4');
+async function executeDirectDownload(url, selector, type, title, ext) {
+  const finalExt = ext || (type === 'audio' ? 'mp3' : (type === 'image' ? 'png' : 'mp4'));
   const cleanTitle = (title || 'download').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'media';
   const dlUrl = `/api/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(selector)}&type=${type}&ext=${finalExt}&title=${encodeURIComponent(cleanTitle)}`;
-  
-  // Use invisible link to trigger browser download manager without navigating away
-  const a = document.createElement('a');
-  a.href = dlUrl;
-  a.setAttribute('download', `${cleanTitle}.${finalExt}`);
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => a.remove(), 2000);
 
-  setTimeout(() => {
-    downloadModal.classList.remove('open');
-  }, 1000);
+  // Abort any ongoing download stream
+  if (activeDownloadController) {
+    try { activeDownloadController.abort(); } catch (e) {}
+  }
+  activeDownloadController = new AbortController();
+
+  // Switch modal state to PROGRESS
+  setModalState('PROGRESS');
+  progressBadge.textContent = `${type.toUpperCase()} • ${finalExt.toUpperCase()}`;
+  progressTitle.textContent = 'Processing & Preparing Stream...';
+  progressDesc.textContent = 'Muxing media formats and initializing download pipeline...';
+  progressBarFill.style.width = '0%';
+  progressPercent.textContent = '0%';
+  progressSize.textContent = 'Connecting...';
+
+  // Wire Cancel Transfer button
+  progressCancelBtn.onclick = () => {
+    if (activeDownloadController) {
+      activeDownloadController.abort();
+      activeDownloadController = null;
+    }
+    showToast('Download transfer cancelled.');
+    setModalState('READY');
+  };
+
+  try {
+    const res = await fetch(dlUrl, {
+      signal: activeDownloadController.signal
+    });
+
+    // Check if server returned a structured error response
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || contentType.includes('application/json')) {
+      let errData = null;
+      try {
+        errData = await res.json();
+      } catch (parseErr) {
+        errData = { error: `Server returned HTTP ${res.status}: ${res.statusText}` };
+      }
+      renderClassifiedError(errData?.classification || errData?.error, errData, url, () => {
+        executeDirectDownload(url, selector, type, title, ext);
+      });
+      return;
+    }
+
+    // Stream chunks with real-time percentage and byte counters
+    const contentLengthHeader = res.headers.get('content-length');
+    const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 0;
+    let receivedBytes = 0;
+
+    progressTitle.textContent = `Downloading ${cleanTitle.slice(0, 32)}...`;
+    progressDesc.textContent = totalBytes > 0
+      ? `Transferring ${formatBytes(totalBytes)} ${finalExt.toUpperCase()} file to browser...`
+      : 'Receiving media stream chunks from server...';
+
+    const reader = res.body ? res.body.getReader() : null;
+    const chunks = [];
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedBytes += value.length;
+
+        if (totalBytes > 0) {
+          const percent = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+          progressBarFill.style.width = `${percent}%`;
+          progressPercent.textContent = `${percent}%`;
+          progressSize.textContent = `${formatBytes(receivedBytes)} / ${formatBytes(totalBytes)}`;
+        } else {
+          progressSize.textContent = `${formatBytes(receivedBytes)} transferred`;
+          progressBarFill.style.width = '75%';
+        }
+      }
+    } else {
+      const blob = await res.blob();
+      chunks.push(new Uint8Array(await blob.arrayBuffer()));
+      receivedBytes = blob.size;
+    }
+
+    // Assemble completed file and trigger browser save
+    progressBarFill.style.width = '100%';
+    progressPercent.textContent = '100%';
+    progressTitle.textContent = 'Download Complete!';
+    progressDesc.textContent = 'Saving file to your downloads...';
+
+    const finalBlob = new Blob(chunks, { type: contentType || 'application/octet-stream' });
+    const blobUrl = URL.createObjectURL(finalBlob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.setAttribute('download', `${cleanTitle}.${finalExt}`);
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    }, 2000);
+
+    showToast(`✅ Successfully downloaded ${cleanTitle}.${finalExt}`);
+    setTimeout(() => {
+      downloadModal.classList.remove('open');
+      setModalState('READY');
+    }, 1200);
+
+  } catch (streamErr) {
+    if (streamErr.name === 'AbortError') {
+      return; // Handled cancel
+    }
+    console.error('Download stream error:', streamErr);
+    renderClassifiedError(streamErr.message, { error: streamErr.message }, url, () => {
+      executeDirectDownload(url, selector, type, title, ext);
+    });
+  } finally {
+    activeDownloadController = null;
+  }
 }
 
 // Modal Close Handlers
@@ -1372,6 +1627,7 @@ window.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', (e) => {
   if (!isDragging) return;
   isDragging = false;
+  try { container.releasePointerCapture(e.pointerId); } catch (_) {}
 
   const moved = Math.abs(e.clientX - startPointerX);
   if (moved < 6) {
@@ -1399,6 +1655,13 @@ window.addEventListener('pointerup', (e) => {
   targetProgress = snapped;
 });
 
+window.addEventListener('pointercancel', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+  try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+  targetProgress = Math.max(0, Math.min(PLATFORMS.length - 1, Math.round(galleryProgress)));
+});
+
 container.addEventListener('wheel', (e) => {
   e.preventDefault();
   const delta = Math.sign(e.deltaY || e.deltaX);
@@ -1418,18 +1681,27 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Dynamic Camera Framing & Resize for Mobile Portrait & Desktop
+// Dynamic Camera Framing & Resize for Mobile Portrait, Tablets & Desktop
 function updateCameraFraming() {
   const w = container.clientWidth;
   const h = container.clientHeight;
   const aspect = w / h;
   camera.aspect = aspect;
 
-  if (aspect < 0.85) {
-    // Narrow Mobile Portrait: Step back so the active and next vinyl remain in view
-    camera.position.z = 5.7;
+  if (w <= 360) {
+    // Ultra-narrow Android compact / Fold outer display
+    camera.position.z = 6.4;
+    galleryGroup.scale.setScalar(0.82);
+  } else if (h <= 520 && aspect > 1.2) {
+    // Mobile Landscape orientation (Wide & Short)
+    camera.position.z = 4.3;
     galleryGroup.scale.setScalar(0.92);
+  } else if (aspect < 0.85) {
+    // Standard Mobile Portrait (360px - 430px)
+    camera.position.z = 5.7;
+    galleryGroup.scale.setScalar(0.90);
   } else if (aspect < 1.2) {
+    // Tablets & Foldables unfolded (600px - 850px)
     camera.position.z = 4.8;
     galleryGroup.scale.setScalar(1.0);
   } else {
@@ -1476,6 +1748,7 @@ function animate(time) {
 // --------------------------------------------------------------------------
 buildIndexMenu();
 updateUI(0);
+fetchRedditAuthStatus();
 updateScribbleRibbons();
 updateCameraFraming();
 requestAnimationFrame(animate);
