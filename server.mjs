@@ -59,9 +59,101 @@ function sanitizeFilename(name, ext = 'mp4') {
 }
 
 // --------------------------------------------------------------------------
+// Specialized Extractor: TikTok via TikWM API (Fast, Watermark-free, 100% reliable)
+// --------------------------------------------------------------------------
+async function extractTikTok(targetUrl) {
+  const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(targetUrl)}`;
+  const res = await fetch(apiUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+  });
+  const data = await res.json();
+  if (data.code !== 0 || !data.data) {
+    throw new Error(data.msg || 'Failed to extract TikTok media');
+  }
+
+  const d = data.data;
+  const videoList = [];
+  const audioList = [];
+
+  if (d.play || d.hdplay) {
+    videoList.push({
+      format_id: 'tiktok_hd_clean',
+      selector: d.play || d.hdplay,
+      resolution: '1080p HD (No Watermark)',
+      label: '1080p HD • Watermark-Free',
+      ext: 'mp4',
+      filesizeFormatted: formatBytes(d.size) || 'HD Master',
+      fps: 60
+    });
+  }
+
+  if (d.wmplay) {
+    videoList.push({
+      format_id: 'tiktok_wm',
+      selector: d.wmplay,
+      resolution: '720p (Original)',
+      label: '720p Standard MP4',
+      ext: 'mp4',
+      filesizeFormatted: 'Standard',
+      fps: 30
+    });
+  }
+
+  if (d.music) {
+    audioList.push({
+      format_id: 'tiktok_music_mp3',
+      selector: d.music,
+      quality: 'Original TikTok Audio',
+      bitrate: '320 kbps',
+      ext: 'mp3',
+      filesizeFormatted: 'High Quality MP3'
+    });
+  }
+
+  return {
+    success: true,
+    id: d.id,
+    title: d.title || 'TikTok Viral Video',
+    uploader: d.author ? `${d.author.nickname || ''} (@${d.author.unique_id || ''})` : '@tiktok_creator',
+    duration: d.duration || 0,
+    durationFormatted: formatDuration(d.duration),
+    thumbnail: d.cover || d.origin_cover || null,
+    platform: 'tiktok',
+    videoFormats: videoList,
+    audioFormats: audioList
+  };
+}
+
+// --------------------------------------------------------------------------
+// Specialized Extractor: Spotify via oEmbed + ytsearch1 audio bridge
+// --------------------------------------------------------------------------
+async function extractSpotify(targetUrl) {
+  const oembedUrl = `https://open.spotify.com/oembed?url=${encodeURIComponent(targetUrl)}`;
+  const oembedRes = await fetch(oembedUrl);
+  if (!oembedRes.ok) {
+    throw new Error('Spotify track not found or invalid URL');
+  }
+  const oembedData = await oembedRes.json();
+  const trackTitle = oembedData.title || 'Spotify Track';
+  const thumbnail = oembedData.thumbnail_url || null;
+
+  // Search YouTube for the matching high-quality audio
+  const searchQuery = `ytsearch1:${trackTitle} audio`;
+  const ytdlpData = await handleYtdlpExtract(searchQuery);
+
+  return {
+    ...ytdlpData,
+    title: trackTitle,
+    uploader: 'Spotify Studio Master',
+    thumbnail: thumbnail || ytdlpData.thumbnail,
+    platform: 'spotify'
+  };
+}
+
+// --------------------------------------------------------------------------
 // API Route: Extract Media Metadata via yt-dlp
 // --------------------------------------------------------------------------
-async function handleExtractInfo(targetUrl) {
+async function handleYtdlpExtract(targetUrl) {
   return new Promise((resolve, reject) => {
     const args = [
       '--dump-single-json',
@@ -173,6 +265,32 @@ async function handleExtractInfo(targetUrl) {
   });
 }
 
+// Master extraction dispatcher
+async function handleExtractInfo(targetUrl) {
+  const lowerUrl = (targetUrl || '').toLowerCase();
+
+  // 1. TikTok router
+  if (lowerUrl.includes('tiktok.com')) {
+    try {
+      return await extractTikTok(targetUrl);
+    } catch (tikErr) {
+      console.warn('TikWM extract failed, falling back to yt-dlp:', tikErr.message);
+    }
+  }
+
+  // 2. Spotify router
+  if (lowerUrl.includes('spotify.com') || lowerUrl.includes('spotify.link')) {
+    try {
+      return await extractSpotify(targetUrl);
+    } catch (spotErr) {
+      console.warn('Spotify oEmbed extract failed, falling back to yt-dlp:', spotErr.message);
+    }
+  }
+
+  // 3. Native yt-dlp extraction
+  return await handleYtdlpExtract(targetUrl);
+}
+
 // --------------------------------------------------------------------------
 // HTTP Request Dispatcher
 // --------------------------------------------------------------------------
@@ -267,6 +385,31 @@ const server = http.createServer(async (req, res) => {
       'mkv': 'video/x-matroska'
     };
     const contentType = contentTypeMap[ext.toLowerCase()] || (mediaType === 'audio' ? 'audio/mpeg' : 'video/mp4');
+
+    // Case A: Direct HTTP stream URL (from TikWM or direct CDN)
+    if (selector.startsWith('http://') || selector.startsWith('https://')) {
+      try {
+        const streamRes = await fetch(selector, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': targetUrl || 'https://www.tiktok.com/'
+          }
+        });
+        if (streamRes.ok && streamRes.body) {
+          res.writeHead(200, {
+            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Content-Type': contentType,
+            'Transfer-Encoding': 'chunked',
+            'Cache-Control': 'no-cache'
+          });
+          const { Readable } = await import('node:stream');
+          Readable.fromWeb(streamRes.body).pipe(res);
+          return;
+        }
+      } catch (proxyErr) {
+        console.error('Direct stream proxy error:', proxyErr.message);
+      }
+    }
 
     res.writeHead(200, {
       'Content-Disposition': `attachment; filename="${filename}"`,

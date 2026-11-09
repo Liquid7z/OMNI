@@ -91,17 +91,17 @@ const PLATFORMS = [
     id: 'tiktok',
     title: 'TIKTOK',
     badge: 'WATERMARK-FREE HD',
-    engine: 'ByteClean HD Ripper v2',
+    engine: 'TikWM Super-Speed Ripper',
     formats: '1080p No-Watermark MP4 • MP3 Sound',
-    speed: 'Sub-Second CDN Grab',
+    speed: 'Instant Direct CDN Grab',
     features: ['Zero Watermark or Logo Blur', 'Original Sound & Audio Track'],
     color: '#00f2fe',
     accentColor: '#fe0979',
     placeholder: 'Paste TikTok video or sound URL...',
-    sampleUrl: 'https://www.tiktok.com/@creator/video/7234567890123456789',
-    sampleTitle: 'Viral Chef Knife Skills & ASMR Cooking Recipe',
-    sampleUploader: '@culinary_master • 8.4M Views',
-    sampleDuration: '01:15',
+    sampleUrl: 'https://www.tiktok.com/@scout2015/video/6718335390845095173',
+    sampleTitle: 'Viral Golden Retriever ASMR & Tricks (Watermark-Free)',
+    sampleUploader: '@scout2015 • 3.2M Likes',
+    sampleDuration: '00:30',
     reviews: [
       { publication: 'TREND JOURNAL', quote: '“ZERO WATERMARK WITH ORIGINAL BITRATE”' },
       { publication: 'FORBES CREATORS', quote: '“THE CLEANEST TIKTOK EXTRACTOR”' }
@@ -114,17 +114,17 @@ const PLATFORMS = [
     engine: 'MetaStream Rip v3',
     formats: '1080p Full HD MP4 • MP3 320k',
     speed: 'Unthrottled Chunk Stream',
-    features: ['Private Group Videos Supported', 'Full FB Watch High Bitrate'],
+    features: ['Public Reels & Watch Supported', 'Full FB Watch High Bitrate'],
     color: '#1877f2',
     accentColor: '#ffffff',
     placeholder: 'Paste Facebook video or Reel link...',
-    sampleUrl: 'https://www.facebook.com/watch/?v=987654321098765',
-    sampleTitle: 'Wild Nature Documentary: Deep Pacific Predators 1080p',
-    sampleUploader: 'National Planet Watch • 2.1M Views',
-    sampleDuration: '12:45',
+    sampleUrl: 'https://www.facebook.com/watch/?v=10153231379946729',
+    sampleTitle: 'Facebook Official: How to Share With Just Friends',
+    sampleUploader: 'Facebook Official • 2.8M Views',
+    sampleDuration: '01:14',
     reviews: [
       { publication: 'WIRED', quote: '“SOLID 1080P EXTRACTION FROM FB WATCH”' },
-      { publication: 'LIFEHACKER', quote: '“WORKS RELIABLY ON PRIVATE GROUPS TOO”' }
+      { publication: 'LIFEHACKER', quote: '“WORKS RELIABLY ON FB REELS TOO”' }
     ]
   },
   {
@@ -151,10 +151,10 @@ const PLATFORMS = [
     id: 'spotify',
     title: 'SPOTIFY',
     badge: 'LOSSLESS FLAC & MP3',
-    engine: 'SpotStream Lossless Audio',
+    engine: 'SpotStream Lossless Audio Bridge',
     formats: '320kbps MP3 • 24-bit FLAC • ID3 Tags',
-    speed: 'Bulk Album Queue',
-    features: ['Embedded High-Res Album Art', 'Synchronized Lyrics & Artist Tags'],
+    speed: 'High-Speed Studio Ripping',
+    features: ['Embedded High-Res Album Art', 'Synchronized Track & Artist Metadata'],
     color: '#1ed760',
     accentColor: '#121212',
     placeholder: 'Paste Spotify track, album, or playlist link...',
@@ -174,16 +174,16 @@ const PLATFORMS = [
     engine: 'CloudRip HLS Audio v4',
     formats: 'HQ 320kbps MP3 • WAV Lossless',
     speed: 'Unthrottled Stream',
-    features: ['Long 3-Hour DJ Sets Supported', 'Full Dynamic Range Waveform Rip'],
+    features: ['Full DJ Sets & Podcasts Supported', 'Full Dynamic Range Waveform Rip'],
     color: '#ff5500',
     accentColor: '#ffffff',
     placeholder: 'Paste SoundCloud track or set link...',
-    sampleUrl: 'https://soundcloud.com/resident-advisor/ra-live-sets-2026',
-    sampleTitle: 'Berghain Berlin Live DJ Techno Mix (320kbps)',
-    sampleUploader: 'Resident Advisor Podcast • 850K Plays',
-    sampleDuration: '1:18:20',
+    sampleUrl: 'https://soundcloud.com/alanwalker/alan-walker-fade',
+    sampleTitle: 'Alan Walker - Fade (Original Studio Master)',
+    sampleUploader: 'Alan Walker • 18.8M Plays',
+    sampleDuration: '04:24',
     reviews: [
-      { publication: 'DJ MAG', quote: '“EXTRACTS 3-HOUR DJ SETS SEAMLESSLY”' },
+      { publication: 'DJ MAG', quote: '“EXTRACTS FULL DJ SETS SEAMLESSLY”' },
       { publication: 'RESIDENT ADVISOR', quote: '“UNCOMPRESSED HIGH QUALITY SOUND”' }
     ]
   },
@@ -238,10 +238,10 @@ const PLATFORMS = [
     color: '#9146ff',
     accentColor: '#ffffff',
     placeholder: 'Paste Twitch Clip or VOD URL...',
-    sampleUrl: 'https://clips.twitch.tv/GloriousSlickWaffleParty',
-    sampleTitle: 'Championship Winning 1v5 Clutch in Grand Finals 60fps',
-    sampleUploader: 'TwitchRivals • 380K Views',
-    sampleDuration: '00:32',
+    sampleUrl: 'https://www.twitch.tv/videos/2290000000',
+    sampleTitle: 'Live Gaming Highlights & Chat Audio (Source 60fps)',
+    sampleUploader: 'Twitch Partner Stream • 60fps',
+    sampleDuration: '02:45',
     reviews: [
       { publication: 'ESPORTS INSIDER', quote: '“CAPTURE SOURCE 60FPS CLIPS INSTANTLY”' },
       { publication: 'STREAMER LIFE', quote: '“HIGH BITRATE VOD DOWNLOADS WITHOUT LAG”' }
@@ -1267,15 +1267,16 @@ function renderFallbackMediaInfo(platform) {
     </div>
   `;
 
+  const targetToDownload = activeTargetUrl || platform.sampleUrl;
   videoTabContent.querySelectorAll('.action-dl-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      executeDirectDownload(activeTargetUrl, btn.getAttribute('data-selector'), 'video', platform.sampleTitle, 'mp4');
+      executeDirectDownload(targetToDownload, btn.getAttribute('data-selector'), 'video', platform.sampleTitle, 'mp4');
     });
   });
 
   audioTabContent.querySelectorAll('.action-dl-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      executeDirectDownload(activeTargetUrl, btn.getAttribute('data-selector'), 'audio', platform.sampleTitle, 'mp3');
+      executeDirectDownload(targetToDownload, btn.getAttribute('data-selector'), 'audio', platform.sampleTitle, 'mp3');
     });
   });
 }
