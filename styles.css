@@ -36,7 +36,7 @@ html, body {
   background-color: var(--bg-color);
   color: var(--text-black);
   font-family: var(--font-sans);
-  overflow: hidden;
+  overflow-x: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -340,7 +340,7 @@ html, body {
   height: 100%;
   pointer-events: auto;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y; /* Allows vertical scrolling on touch devices */
 }
 
 .webgl-canvas-mount:active {
@@ -1175,8 +1175,21 @@ html, body {
 
 /* Standard Mobile & Small Tablets (768px down) */
 @media (max-width: 768px) {
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
   .experience-viewport {
-    padding: calc(1.2rem + var(--safe-top)) calc(1.2rem + var(--safe-right)) calc(1.2rem + var(--safe-bottom)) calc(1.2rem + var(--safe-left));
+    min-height: 100dvh;
+    height: auto;
+    padding: calc(1.2rem + var(--safe-top)) calc(1.2rem + var(--safe-right)) calc(6.5rem + var(--safe-bottom)) calc(1.2rem + var(--safe-left));
+    overflow-x: hidden;
+    position: relative;
   }
 
   .header-nav {
@@ -1193,12 +1206,14 @@ html, body {
   }
 
   .experience-info {
-    position: absolute;
-    top: calc(3.6rem + var(--safe-top));
-    left: calc(1.2rem + var(--safe-left));
-    right: calc(1.2rem + var(--safe-right));
-    width: auto;
-    pointer-events: none;
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    margin-top: calc(2.8rem + var(--safe-top));
+    margin-bottom: 0.8rem;
+    pointer-events: auto;
   }
 
   .film-title-heading {
@@ -1255,23 +1270,32 @@ html, body {
     max-width: 160px;
   }
 
-  /* Dock adjustments for mobile */
+  /* Dock adjustments for mobile: Fixed above browser bottom navigation bar */
   .download-dock-container {
-    bottom: calc(1.2rem + var(--safe-bottom));
-    width: 100%;
-    max-width: calc(100% - 1.4rem);
+    position: fixed;
+    bottom: calc(0.75rem + max(var(--safe-bottom), 6px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 1.4rem);
+    max-width: 540px;
     padding: 0;
-    gap: 0.5rem;
+    gap: 0.4rem;
     z-index: 50;
+    pointer-events: none;
+  }
+
+  .download-dock-container > * {
+    pointer-events: auto;
   }
 
   .download-dock {
     padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   .url-input {
     font-size: 16px; /* Prevents auto-zoom on mobile Android/iOS */
-    min-width: 0;
+    min-width: 80px;
     flex: 1;
   }
 
@@ -1282,28 +1306,90 @@ html, body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
   }
 
   .paste-btn {
-    padding: 0.55rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
     margin-right: 0.3rem;
+    min-height: 44px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    touch-action: manipulation;
+  }
+
+  .paste-btn span {
+    display: inline !important;
+  }
+
+  .download-btn {
+    min-height: 44px;
+    min-width: 44px;
+    flex-shrink: 0;
+    touch-action: manipulation;
   }
 
   .demo-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     gap: 0.35rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: 100%;
+    padding: 0.1rem 0.2rem 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .demo-chips::-webkit-scrollbar {
+    display: none;
   }
 
   .demo-chip {
+    flex-shrink: 0;
     font-size: 0.68rem;
     padding: 0.22rem 0.55rem;
     min-height: 32px;
     display: inline-flex;
     align-items: center;
+    touch-action: pan-x;
   }
 
-  /* Bottom social proof hidden on compact mobile screens */
+  /* Editorial proof on mobile rendered in natural scroll flow */
   .testimonial-section {
-    display: none;
+    position: relative;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    margin-top: calc(75vh - 120px);
+    margin-bottom: calc(7.5rem + var(--safe-bottom));
+    display: flex;
+    justify-content: center;
+    z-index: 20;
+    pointer-events: auto;
+  }
+
+  .testimonial-columns {
+    flex-direction: column;
+    gap: 1.4rem;
+    padding: 0 1rem;
+    align-items: center;
+  }
+
+  .testimonial-col {
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
   }
 
   /* Bottom sheet modal styling for mobile */
@@ -1405,14 +1491,20 @@ html, body {
     gap: 0.7rem;
   }
 
-  .paste-btn span {
-    display: none; /* Icon-only paste button preserves width for input */
-  }
-
   .paste-btn {
-    padding: 0.6rem 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.45rem 0.65rem;
     margin-right: 0.25rem;
     min-width: 44px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .paste-btn span {
+    display: inline !important;
+    font-size: 0.76rem;
   }
 
   .film-title-heading {
@@ -1465,9 +1557,8 @@ html, body {
   }
 
   .experience-info {
-    top: calc(3.2rem + var(--safe-top));
-    left: calc(0.8rem + var(--safe-left));
-    right: calc(0.8rem + var(--safe-right));
+    margin-top: calc(2.4rem + var(--safe-top));
+    padding: 0 0.2rem;
   }
 
   .film-title-heading {
@@ -1486,12 +1577,23 @@ html, body {
   }
 
   .download-dock-container {
-    bottom: calc(0.8rem + var(--safe-bottom));
+    bottom: calc(0.6rem + max(var(--safe-bottom), 6px));
     max-width: calc(100% - 0.8rem);
   }
 
   .download-dock {
     padding: 0.3rem 0.35rem 0.3rem 0.55rem;
+  }
+
+  .paste-btn {
+    padding: 0.45rem 0.6rem;
+    gap: 0.25rem;
+    min-width: 44px;
+  }
+
+  .paste-btn span {
+    display: inline !important;
+    font-size: 0.72rem;
   }
 
   .input-platform-icon {
@@ -1575,11 +1677,23 @@ html, body {
 
   .download-dock-container {
     max-width: calc(100% - 0.4rem);
-    bottom: calc(0.6rem + var(--safe-bottom));
+    bottom: calc(0.5rem + max(var(--safe-bottom), 4px));
+  }
+
+  .paste-btn {
+    padding: 0.4rem 0.5rem;
+    gap: 0.2rem;
+    min-width: 44px;
+  }
+
+  .paste-btn span {
+    display: inline !important;
+    font-size: 0.7rem;
   }
 
   .url-input {
     font-size: 13px;
+    min-width: 75px;
   }
 
   .media-preview-header {
@@ -1666,7 +1780,8 @@ html, body {
   }
 
   .download-dock-container {
-    bottom: calc(0.45rem + var(--safe-bottom));
+    position: fixed;
+    bottom: calc(0.35rem + max(var(--safe-bottom), 4px));
     max-width: 500px;
     gap: 0.25rem;
   }

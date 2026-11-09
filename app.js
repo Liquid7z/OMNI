@@ -1037,10 +1037,14 @@ let galleryProgress = 0;
 let targetProgress = 0;
 let isDragging = false;
 let startPointerX = 0;
+let startPointerY = 0;
 let startProgress = 0;
 let dragVelocity = 0;
 let lastPointerX = 0;
 let lastPointerTime = 0;
+let dragIntentDetermined = false;
+let isHorizontalDrag = false;
+let activePointerId = null;
 
 function updateDiscTransforms(currentProg) {
   const hGap = 2.4;
@@ -1142,23 +1146,62 @@ urlInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Clipboard Paste Button
+// Clipboard Paste Button with Mobile Android Optimization
 pasteBtn.addEventListener('click', async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    if (text) {
-      urlInput.value = text;
-      const detectedId = detectPlatformFromUrl(text);
+  pasteBtn.style.transform = 'scale(0.94)';
+  setTimeout(() => { pasteBtn.style.transform = ''; }, 150);
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // 1. Try modern Async Clipboard API
+  if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+    try {
+      const text = await navigator.clipboard.readText();
+      const cleanText = (text || '').trim();
+
+      if (!cleanText) {
+        showToast('⚠️ Clipboard is empty. Copy a link first!');
+        urlInput.focus();
+        return;
+      }
+
+      urlInput.value = cleanText;
+      // Trigger all input and validation handlers
+      urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const detectedId = detectPlatformFromUrl(cleanText);
       const foundIndex = PLATFORMS.findIndex(p => p.id === detectedId);
-      if (foundIndex !== -1) {
+      if (foundIndex !== -1 && foundIndex !== currentIndex) {
         navigateTo(foundIndex);
       }
-      showToast(`📋 Pasted & Detected: ${detectedId.toUpperCase()}`);
+
+      showToast(`📋 Pasted: ${detectedId.toUpperCase()}`);
+      return;
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        urlInput.focus();
+        showToast(isMobile ? '⚠️ Clipboard blocked. Tap & hold input to Paste.' : '⚠️ Clipboard blocked. Press Ctrl+V to paste.');
+        return;
+      }
+      // Fall through to fallback
     }
-  } catch (err) {
-    urlInput.focus();
-    showToast('Press Ctrl+V to paste URL');
   }
+
+  // 2. Fallback for restricted contexts (HTTP, older WebViews, permission denials)
+  urlInput.focus();
+  try {
+    const success = document.execCommand && document.execCommand('paste');
+    if (success && urlInput.value.trim()) {
+      urlInput.value = urlInput.value.trim();
+      urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const detectedId = detectPlatformFromUrl(urlInput.value);
+      showToast(`📋 Pasted: ${detectedId.toUpperCase()}`);
+      return;
+    }
+  } catch (_) {}
+
+  // 3. User instruction fallback
+  showToast(isMobile ? '📋 Tap & hold the input box to Paste link' : '📋 Press Ctrl+V to paste link');
 });
 
 // Quick Demo Chips
@@ -1598,24 +1641,58 @@ formatTabs.forEach(tab => {
 const raycaster = new THREE.Raycaster();
 const mouseVec = new THREE.Vector2();
 
+// Disambiguated Pointer / Touch Drag & Natural Scroll Disambiguation
 container.addEventListener('pointerdown', (e) => {
+  // Do NOT capture immediately: allow browser to evaluate vertical scrolling
   isDragging = true;
+  dragIntentDetermined = false;
+  isHorizontalDrag = false;
   startPointerX = e.clientX;
+  startPointerY = e.clientY;
   lastPointerX = e.clientX;
   lastPointerTime = performance.now();
   startProgress = galleryProgress;
   dragVelocity = 0;
-  container.setPointerCapture(e.pointerId);
+  activePointerId = e.pointerId;
 });
 
 window.addEventListener('pointermove', (e) => {
   if (!isDragging) return;
 
+  const deltaX = e.clientX - startPointerX;
+  const deltaY = e.clientY - startPointerY;
+
+  // Disambiguate between vertical page scrolling and horizontal vinyl rotation
+  if (!dragIntentDetermined) {
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    if (absX < 7 && absY < 7) return; // Jitter deadzone
+
+    dragIntentDetermined = true;
+    if (absY > absX) {
+      // Natural vertical scroll gesture: release drag so browser scrolls with momentum!
+      isHorizontalDrag = false;
+      isDragging = false;
+      activePointerId = null;
+      return;
+    } else {
+      // Intentional horizontal drag on the 3D vinyl carousel
+      isHorizontalDrag = true;
+      try {
+        if (activePointerId !== null) {
+          container.setPointerCapture(activePointerId);
+        }
+      } catch (_) {}
+    }
+  }
+
+  if (!isHorizontalDrag) return;
+
   const now = performance.now();
   const dt = Math.max(1, now - lastPointerTime);
-  const deltaX = e.clientX - lastPointerX;
+  const stepDeltaX = e.clientX - lastPointerX;
 
-  dragVelocity = deltaX / dt;
+  dragVelocity = stepDeltaX / dt;
   lastPointerX = e.clientX;
   lastPointerTime = now;
 
@@ -1624,13 +1701,20 @@ window.addEventListener('pointermove', (e) => {
   targetProgress = galleryProgress;
 });
 
-window.addEventListener('pointerup', (e) => {
-  if (!isDragging) return;
+function endPointerDrag(e) {
+  if (!isDragging && !isHorizontalDrag) return;
+  const wasHorizontal = isHorizontalDrag;
   isDragging = false;
-  try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+  isHorizontalDrag = false;
+  dragIntentDetermined = false;
 
-  const moved = Math.abs(e.clientX - startPointerX);
-  if (moved < 6) {
+  if (activePointerId !== null) {
+    try { container.releasePointerCapture(activePointerId); } catch (_) {}
+    activePointerId = null;
+  }
+
+  const moved = Math.hypot(e.clientX - startPointerX, e.clientY - startPointerY);
+  if (moved < 7) {
     const rect = container.getBoundingClientRect();
     mouseVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouseVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1649,18 +1733,16 @@ window.addEventListener('pointerup', (e) => {
     }
   }
 
-  const momentum = -dragVelocity * 140;
-  let snapped = Math.round(galleryProgress + momentum);
-  snapped = Math.max(0, Math.min(PLATFORMS.length - 1, snapped));
-  targetProgress = snapped;
-});
+  if (wasHorizontal) {
+    const momentum = -dragVelocity * 140;
+    let snapped = Math.round(galleryProgress + momentum);
+    snapped = Math.max(0, Math.min(PLATFORMS.length - 1, snapped));
+    targetProgress = snapped;
+  }
+}
 
-window.addEventListener('pointercancel', (e) => {
-  if (!isDragging) return;
-  isDragging = false;
-  try { container.releasePointerCapture(e.pointerId); } catch (_) {}
-  targetProgress = Math.max(0, Math.min(PLATFORMS.length - 1, Math.round(galleryProgress)));
-});
+window.addEventListener('pointerup', endPointerDrag);
+window.addEventListener('pointercancel', endPointerDrag);
 
 container.addEventListener('wheel', (e) => {
   e.preventDefault();
@@ -1691,23 +1773,28 @@ function updateCameraFraming() {
   if (w <= 360) {
     // Ultra-narrow Android compact / Fold outer display
     camera.position.z = 6.4;
-    galleryGroup.scale.setScalar(0.82);
+    galleryGroup.scale.setScalar(0.78);
+    galleryGroup.position.y = 0.22;
   } else if (h <= 520 && aspect > 1.2) {
     // Mobile Landscape orientation (Wide & Short)
     camera.position.z = 4.3;
     galleryGroup.scale.setScalar(0.92);
+    galleryGroup.position.y = 0;
   } else if (aspect < 0.85) {
     // Standard Mobile Portrait (360px - 430px)
-    camera.position.z = 5.7;
-    galleryGroup.scale.setScalar(0.90);
+    camera.position.z = 5.9;
+    galleryGroup.scale.setScalar(0.82);
+    galleryGroup.position.y = 0.20;
   } else if (aspect < 1.2) {
     // Tablets & Foldables unfolded (600px - 850px)
     camera.position.z = 4.8;
     galleryGroup.scale.setScalar(1.0);
+    galleryGroup.position.y = 0;
   } else {
     // Desktop Landscape
     camera.position.z = 4.4;
     galleryGroup.scale.setScalar(1.08);
+    galleryGroup.position.y = 0;
   }
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
