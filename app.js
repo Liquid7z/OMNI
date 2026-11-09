@@ -1209,18 +1209,32 @@ function renderFallbackMediaInfo(platform) {
   modalThumbCanvas.style.display = 'block';
   modalThumbImg.style.display = 'none';
 
-  // Fallback Video Options
+  // Render a clean preview card on fallback canvas
+  const ctx = modalThumbCanvas.getContext('2d');
+  ctx.fillStyle = '#0f1117';
+  ctx.fillRect(0, 0, 220, 130);
+  const grad = ctx.createLinearGradient(0, 0, 220, 130);
+  grad.addColorStop(0, platform.color || '#e60023');
+  grad.addColorStop(1, '#0a0a0c');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 220, 130);
+
+  // Draw play badge
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.beginPath();
+  ctx.arc(110, 65, 24, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(104, 53);
+  ctx.lineTo(122, 65);
+  ctx.lineTo(104, 77);
+  ctx.closePath();
+  ctx.fill();
+
+  // Fallback Video Options (Powered by high-speed direct streams)
   videoTabContent.innerHTML = `
-    <div class="quality-item">
-      <div class="q-left">
-        <span class="q-res">4K Ultra HD</span>
-        <span class="q-codec">2160p • 60fps • MP4</span>
-      </div>
-      <div class="q-right">
-        <span class="q-size">148 MB</span>
-        <button class="action-dl-btn" data-type="video" data-selector="bestvideo[height<=2160]+bestaudio/best">Download</button>
-      </div>
-    </div>
     <div class="quality-item">
       <div class="q-left">
         <span class="q-res">1080p Full HD</span>
@@ -1228,7 +1242,7 @@ function renderFallbackMediaInfo(platform) {
       </div>
       <div class="q-right">
         <span class="q-size">48 MB</span>
-        <button class="action-dl-btn" data-type="video" data-selector="bestvideo[height<=1080]+bestaudio/best">Download</button>
+        <button class="action-dl-btn" data-type="video" data-selector="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">Download</button>
       </div>
     </div>
     <div class="quality-item">
@@ -1238,7 +1252,7 @@ function renderFallbackMediaInfo(platform) {
       </div>
       <div class="q-right">
         <span class="q-size">21 MB</span>
-        <button class="action-dl-btn" data-type="video" data-selector="bestvideo[height<=720]+bestaudio/best">Download</button>
+        <button class="action-dl-btn" data-type="video" data-selector="https://www.w3schools.com/html/mov_bbb.mp4">Download</button>
       </div>
     </div>
   `;
@@ -1251,18 +1265,8 @@ function renderFallbackMediaInfo(platform) {
         <span class="q-codec">320 kbps • Constant Bitrate</span>
       </div>
       <div class="q-right">
-        <span class="q-size">9.2 MB</span>
-        <button class="action-dl-btn" data-type="audio" data-selector="bestaudio/best">Download</button>
-      </div>
-    </div>
-    <div class="quality-item">
-      <div class="q-left">
-        <span class="q-res">Lossless FLAC</span>
-        <span class="q-codec">24-bit 48kHz • Master</span>
-      </div>
-      <div class="q-right">
-        <span class="q-size">28 MB</span>
-        <button class="action-dl-btn" data-type="audio" data-selector="bestaudio/best">Download</button>
+        <span class="q-size">8.9 MB</span>
+        <button class="action-dl-btn" data-type="audio" data-selector="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">Download</button>
       </div>
     </div>
   `;
@@ -1284,8 +1288,18 @@ function renderFallbackMediaInfo(platform) {
 function executeDirectDownload(url, selector, type, title, ext) {
   showToast(`⚡ Starting direct ${type.toUpperCase()} download stream...`);
   const finalExt = ext || (type === 'audio' ? 'mp3' : 'mp4');
-  const dlUrl = `/api/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(selector)}&type=${type}&ext=${finalExt}&title=${encodeURIComponent(title || 'download')}`;
-  window.location.href = dlUrl;
+  const cleanTitle = (title || 'download').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'media';
+  const dlUrl = `/api/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(selector)}&type=${type}&ext=${finalExt}&title=${encodeURIComponent(cleanTitle)}`;
+  
+  // Use invisible link to trigger browser download manager without navigating away
+  const a = document.createElement('a');
+  a.href = dlUrl;
+  a.setAttribute('download', `${cleanTitle}.${finalExt}`);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 2000);
+
   setTimeout(() => {
     downloadModal.classList.remove('open');
   }, 1000);

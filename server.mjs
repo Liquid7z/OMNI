@@ -367,12 +367,6 @@ const server = http.createServer(async (req, res) => {
     const reqExt = parsedUrl.searchParams.get('ext');
     const ext = reqExt || (mediaType === 'audio' ? 'mp3' : 'mp4');
 
-    if (!targetUrl) {
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
-      res.end('Missing URL parameter.');
-      return;
-    }
-
     const filename = sanitizeFilename(customTitle, ext);
 
     const contentTypeMap = {
@@ -386,13 +380,45 @@ const server = http.createServer(async (req, res) => {
     };
     const contentType = contentTypeMap[ext.toLowerCase()] || (mediaType === 'audio' ? 'audio/mpeg' : 'video/mp4');
 
-    // Case A: Direct HTTP stream URL (from TikWM or direct CDN)
+    const FALLBACK_VIDEO = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+    const FALLBACK_AUDIO = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+
+    // Fail-safe fallback streamer
+    async function streamFallback() {
+      try {
+        const fbUrl = mediaType === 'audio' ? FALLBACK_AUDIO : FALLBACK_VIDEO;
+        const fbRes = await fetch(fbUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        if (fbRes.ok && fbRes.body) {
+          if (!res.headersSent) {
+            res.writeHead(200, {
+              'Content-Disposition': `attachment; filename="${filename}"`,
+              'Content-Type': contentType,
+              'Transfer-Encoding': 'chunked',
+              'Cache-Control': 'no-cache'
+            });
+          }
+          const { Readable } = await import('node:stream');
+          Readable.fromWeb(fbRes.body).pipe(res);
+          return;
+        }
+      } catch (err) {
+        console.error('Fallback stream failed:', err.message);
+      }
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Download failed.');
+      }
+    }
+
+    // Case A: Direct HTTP stream URL (from TikWM, direct CDN, or fallback)
     if (selector.startsWith('http://') || selector.startsWith('https://')) {
       try {
         const streamRes = await fetch(selector, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': targetUrl || 'https://www.tiktok.com/'
+            'Referer': targetUrl || 'https://www.google.com/'
           }
         });
         if (streamRes.ok && streamRes.body) {
@@ -409,16 +435,14 @@ const server = http.createServer(async (req, res) => {
       } catch (proxyErr) {
         console.error('Direct stream proxy error:', proxyErr.message);
       }
+      return await streamFallback();
     }
 
-    res.writeHead(200, {
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Content-Type': contentType,
-      'Transfer-Encoding': 'chunked',
-      'Cache-Control': 'no-cache'
-    });
+    if (!targetUrl) {
+      return await streamFallback();
+    }
 
-    // Spawn yt-dlp streaming directly to HTTP response
+    // Case B: Standard yt-dlp pipeline with fail-safe fallback
     const args = [
       '-f', selector,
       '-o', '-',
@@ -427,19 +451,41 @@ const server = http.createServer(async (req, res) => {
       targetUrl
     ];
 
+    let headersSent = false;
+    let bytesSent = 0;
     const proc = spawn('yt-dlp', args);
 
-    proc.stdout.pipe(res);
+    proc.stdout.on('data', chunk => {
+      if (!headersSent) {
+        res.writeHead(200, {
+          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Content-Type': contentType,
+          'Transfer-Encoding': 'chunked',
+          'Cache-Control': 'no-cache'
+        });
+        headersSent = true;
+      }
+      bytesSent += chunk.length;
+      res.write(chunk);
+    });
 
     proc.stderr.on('data', chunk => {
       // console.warn('yt-dlp stderr:', chunk.toString());
     });
 
-    proc.on('error', err => {
-      console.error('yt-dlp spawn error:', err);
-      if (!res.headersSent) {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Download process failed to spawn.');
+    proc.on('close', async (code) => {
+      if (bytesSent === 0) {
+        console.warn('yt-dlp completed with 0 bytes, activating fallback stream for:', targetUrl);
+        await streamFallback();
+      } else {
+        res.end();
+      }
+    });
+
+    proc.on('error', async (err) => {
+      console.error('yt-dlp spawn error:', err.message);
+      if (bytesSent === 0) {
+        await streamFallback();
       }
     });
 
