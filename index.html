@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OMNI — Universal Video & Audio Downloader</title>
+  <meta name="description" content="Download high-resolution video and lossless audio from YouTube, Instagram, Terabox, TikTok, Facebook, Twitter, Spotify and more.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230c0c0c%22/><polygon points=%2240,30 70,50 40,70%22 fill=%22%23ffffff%22/></svg>">
+
+  <!-- Editorial Typography & Modern Grotesque -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="theme-light">
+
+  <!-- Subtle Film Grain Background Overlay -->
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <!-- Top Center Navigation -->
+  <header class="header-nav">
+    <div class="nav-center">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#" class="nav-logo" aria-label="OMNIDL Home">
+            <svg class="omni-svg" viewBox="0 0 32 32" fill="currentColor">
+              <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2.5"/>
+              <circle cx="16" cy="16" r="4.5" fill="currentColor"/>
+              <path d="M16 4 A12 12 0 0 1 28 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="logo-text">OMNI</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link active">
+            <span>Downloader</span>
+            <span class="nav-dot"></span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" id="navAudioRipper">Audio Ripper</a>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link nav-btn" id="indexToggleBtn" aria-expanded="false">
+            <span>Platforms</span>
+            <svg class="chevron-svg" viewBox="0 0 10 6" fill="none">
+              <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Dropdown Index Menu -->
+    <div class="index-dropdown" id="indexDropdown" aria-hidden="true">
+      <div class="index-inner">
+        <div class="index-header">SELECT PLATFORM DOWNLOADER</div>
+        <ul class="index-film-list" id="indexFilmList">
+          <!-- Injected via JavaScript -->
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Experience -->
+  <main class="experience-viewport">
+
+    <!-- Top-Left Platform Info Block -->
+    <section class="experience-info">
+      <div class="platform-badge" id="platformBadge">UNIVERSAL AUTO-DETECT</div>
+      <h1 class="film-title-heading" id="filmTitle">UNIVERSAL</h1>
+      
+      <div class="metadata-table">
+        <div class="meta-row">
+          <div class="meta-label">ENGINE</div>
+          <div class="meta-value" id="specEngine">OmniCore AI v4.8</div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">FORMATS</div>
+          <div class="meta-value" id="specFormats">4K MP4 • 320k MP3 • FLAC</div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">MAX SPEED</div>
+          <div class="meta-value" id="specSpeed">Uncapped (Gigabit CDN)</div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">FEATURES</div>
+          <div class="meta-value" id="specFeatures">
+            <span>No Watermark</span><br>
+            <span>Lossless Audio Extract</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center 3D WebGL Vinyl Stage -->
+    <section class="disc-stage-container" id="discStage">
+      <!-- WebGL Three.js Canvas Container -->
+      <div class="webgl-canvas-mount" id="webglMount"></div>
+    </section>
+
+    <!-- Interactive URL Download Dock (Floating Web App Bar) -->
+    <section class="download-dock-container">
+      <div class="download-dock">
+        <div class="input-platform-icon" id="inputPlatformIcon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+        </div>
+        
+        <input 
+          type="text" 
+          id="urlInput" 
+          class="url-input" 
+          placeholder="Paste YouTube, Instagram, Terabox, TikTok or any link..." 
+          autocomplete="off" 
+          spellcheck="false"
+        >
+
+        <button class="dock-btn paste-btn" id="pasteBtn" title="Paste from clipboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          </svg>
+          <span>Paste</span>
+        </button>
+
+        <button class="dock-btn download-btn" id="downloadBtn">
+          <span>Fetch Media</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="btn-icon-bolt">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Quick Platform Demo Chips -->
+      <div class="demo-chips">
+        <span class="chip-label">Quick Test:</span>
+        <button class="demo-chip" data-sample="youtube">YouTube 4K</button>
+        <button class="demo-chip" data-sample="instagram">Instagram Reel</button>
+        <button class="demo-chip" data-sample="terabox">Terabox Cloud</button>
+        <button class="demo-chip" data-sample="tiktok">TikTok HD</button>
+      </div>
+    </section>
+
+    <!-- Bottom Testimonials Block (Two Columns under Disc) -->
+    <section class="testimonial-section">
+      <div class="testimonial-columns" id="testimonialWrap">
+        
+        <!-- Review 1 -->
+        <div class="testimonial-col">
+          <div class="stars-row">
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+          </div>
+          <div class="review-publication" id="reviewPub1">PRODUCT HUNT</div>
+          <div class="review-quote" id="reviewQuote1">“DETECTS ALMOST EVERY STREAM INSTANTLY”</div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="testimonial-col">
+          <div class="stars-row">
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+            <svg viewBox="0 0 11 10" class="star-svg"><path d="M5.24862 0L6.68508 3.53591L10.4972 3.81215L7.62431 6.29834L8.50829 10L5.24862 8.01105L1.98895 10L2.87293 6.29834L0 3.81215L3.81215 3.53591L5.24862 0Z" fill="currentColor"/></svg>
+          </div>
+          <div class="review-publication" id="reviewPub2">TECHRADAR</div>
+          <div class="review-quote" id="reviewQuote2">“THE ULTIMATE ALL-IN-ONE MEDIA EXTRACTOR”</div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Download Results Modal -->
+  <div class="download-modal-backdrop" id="downloadModal" aria-hidden="true">
+    <div class="download-card">
+      <button class="modal-close-btn" id="closeModalBtn" aria-label="Close dialog">×</button>
+      
+      <div class="modal-loading-state" id="modalLoading">
+        <div class="spinner-ring"></div>
+        <div class="loading-title">Extracting Media Streams...</div>
+        <div class="loading-desc" id="loadingStatusText">Analyzing audio/video bitrates from target server...</div>
+      </div>
+
+      <div class="modal-ready-state" id="modalReady" style="display:none;">
+        <div class="media-preview-header">
+          <div class="media-thumb-wrap">
+            <img class="media-thumb-img" id="modalThumbImg" alt="Media Thumbnail" style="display:none;">
+            <canvas class="media-thumb-canvas" id="modalThumbCanvas" width="220" height="130"></canvas>
+            <span class="media-duration-tag" id="mediaDurationTag">03:42</span>
+          </div>
+          <div class="media-meta">
+            <span class="detected-badge" id="detectedPlatformBadge">YOUTUBE 4K</span>
+            <h3 class="media-title" id="mediaTitle">Synthwave Chill Odyssey 2026 (Ultra HD 60fps)</h3>
+            <p class="media-uploader" id="mediaUploader">Channel: Neon Beats Studio • 1.2M Views</p>
+          </div>
+        </div>
+
+        <!-- Format Options Tabs -->
+        <div class="format-tabs">
+          <button class="format-tab active" data-tab="video">🎬 Video (MP4)</button>
+          <button class="format-tab" data-tab="audio">🎵 Audio (MP3 / FLAC)</button>
+        </div>
+
+        <!-- Video Downloads Table -->
+        <div class="format-content active" id="videoTabContent">
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">4K Ultra HD</span>
+              <span class="q-codec">2160p • 60fps • HDR • MP4</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">148.4 MB</span>
+              <button class="action-dl-btn" data-type="video" data-quality="4K_2160p">Download</button>
+            </div>
+          </div>
+
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">1080p Full HD</span>
+              <span class="q-codec">1080p • 60fps • MP4</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">48.2 MB</span>
+              <button class="action-dl-btn" data-type="video" data-quality="1080p_FHD">Download</button>
+            </div>
+          </div>
+
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">720p HD</span>
+              <span class="q-codec">720p • 30fps • Fast • MP4</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">21.5 MB</span>
+              <button class="action-dl-btn" data-type="video" data-quality="720p_HD">Download</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Downloads Table -->
+        <div class="format-content" id="audioTabContent" style="display:none;">
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">MP3 Audio (HQ)</span>
+              <span class="q-codec">320 kbps • Constant Bitrate • Stereo</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">9.2 MB</span>
+              <button class="action-dl-btn" data-type="audio" data-quality="MP3_320k">Download</button>
+            </div>
+          </div>
+
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">Lossless FLAC</span>
+              <span class="q-codec">24-bit • 48 kHz • Studio Master</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">28.4 MB</span>
+              <button class="action-dl-btn" data-type="audio" data-quality="FLAC_Lossless">Download</button>
+            </div>
+          </div>
+
+          <div class="quality-item">
+            <div class="q-left">
+              <span class="q-res">M4A Audio</span>
+              <span class="q-codec">256 kbps AAC • Apple Compatible</span>
+            </div>
+            <div class="q-right">
+              <span class="q-size">6.8 MB</span>
+              <button class="action-dl-btn" data-type="audio" data-quality="M4A_256k">Download</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notification" id="toastNotification" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

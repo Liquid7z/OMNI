@@ -1,0 +1,1047 @@
+/* ==========================================================================
+   OMNI UNIVERSAL DOWNLOADER — MODERN HIGH-CONTRAST LIGHT EDITORIAL THEME
+   Recreated with 3D Vinyl Experience for Multi-Platform Video/Audio Ripping
+   ========================================================================== */
+
+:root {
+  --bg-color: #f7f7f7;
+  --surface-white: #ffffff;
+  --text-black: #0c0c0c;
+  --text-gray: #555555;
+  --text-light-gray: #8c8c8c;
+  --border-line: rgba(0, 0, 0, 0.12);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --accent-blue: #0066ff;
+  --accent-cyan: #00d2ff;
+  --accent-red: #ff0033;
+  --font-serif: "Cormorant Garamond", "PPEiko", "Newsreader", "Didot", serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, Consolas, monospace;
+  --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-black);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle Noise Texture */
+.grain-overlay {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  opacity: 0.032;
+  z-index: 100;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   1. Header & Navigation
+   -------------------------------------------------------------------------- */
+.header-nav {
+  position: fixed;
+  top: 1.25rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.nav-center {
+  pointer-events: auto;
+  position: relative;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-line);
+  border-radius: 999px;
+  padding: 0.4rem 1.4rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo {
+  color: var(--text-black);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.omni-svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.logo-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.nav-link {
+  color: var(--text-black);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 0.2s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  opacity: 0.7;
+}
+
+.nav-link.active {
+  font-weight: 600;
+}
+
+.nav-dot {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: var(--text-black);
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-black);
+}
+
+.chevron-svg {
+  width: 8px;
+  height: 5px;
+  transition: transform 0.25s ease;
+}
+
+.nav-btn[aria-expanded="true"] .chevron-svg {
+  transform: rotate(180deg);
+}
+
+/* Index Dropdown */
+.index-dropdown {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  width: 440px;
+  max-height: 440px;
+  background: #ffffff;
+  border: 1px solid var(--border-line);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 0.8rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  overflow-y: auto;
+}
+
+.index-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.index-header {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-light-gray);
+  padding: 0.4rem 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 0.4rem;
+}
+
+.index-film-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.index-film-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.index-film-item:hover, .index-film-item.active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.index-film-item-title {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-black);
+}
+
+.index-film-item-year {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-gray);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Main Viewport & Left Specs Block
+   -------------------------------------------------------------------------- */
+.experience-viewport {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem 3.5rem;
+}
+
+.experience-info {
+  position: absolute;
+  top: 2.5rem;
+  left: 3.5rem;
+  width: 330px;
+  z-index: 20;
+}
+
+.platform-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  margin-bottom: 0.4rem;
+  border: 1px solid var(--border-line);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.film-title-heading {
+  font-family: var(--font-serif);
+  font-size: 2.85rem;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: var(--text-black);
+  margin-bottom: 1.4rem;
+  line-height: 0.95;
+}
+
+.metadata-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border-line);
+}
+
+.metadata-table .meta-row:last-child {
+  border-bottom: 1px solid var(--border-line);
+}
+
+.meta-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-gray);
+  text-transform: uppercase;
+  padding-top: 0.15rem;
+}
+
+.meta-value {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-black);
+  text-align: right;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   3. Center Stage — 3D Vinyl Discs
+   -------------------------------------------------------------------------- */
+.disc-stage-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.webgl-canvas-mount {
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.webgl-canvas-mount:active {
+  cursor: grabbing;
+}
+
+/* --------------------------------------------------------------------------
+   4. Floating Download Dock (Modern Web App Bar)
+   -------------------------------------------------------------------------- */
+.download-dock-container {
+  position: absolute;
+  bottom: 6.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  z-index: 40;
+  width: 100%;
+  max-width: 680px;
+  padding: 0 1.5rem;
+}
+
+.download-dock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  padding: 0.45rem 0.55rem 0.45rem 1.1rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.download-dock:focus-within {
+  border-color: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(0, 0, 0, 0.04);
+}
+
+.input-platform-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 0.75rem;
+  color: var(--text-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-platform-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.url-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--text-black);
+  min-width: 0;
+}
+
+.url-input::placeholder {
+  color: #999999;
+  font-weight: 400;
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.65rem 1.1rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.paste-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-black);
+  margin-right: 0.45rem;
+  padding: 0.6rem 0.9rem;
+}
+
+.paste-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.download-btn {
+  background: var(--text-black);
+  color: #ffffff;
+  padding: 0.65rem 1.3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.download-btn:hover {
+  background: #222222;
+  transform: translateY(-1px);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon-bolt {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* Demo Chips */
+.demo-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chip-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-light-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.2rem;
+}
+
+.demo-chip {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-line);
+  color: var(--text-black);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.demo-chip:hover {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   5. Bottom Social Proof & Latency Stats
+   -------------------------------------------------------------------------- */
+.testimonial-section {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.testimonial-columns {
+  display: flex;
+  gap: 9rem;
+  align-items: flex-start;
+  text-align: center;
+}
+
+.testimonial-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 290px;
+}
+
+.stars-row {
+  display: flex;
+  gap: 0.22rem;
+  margin-bottom: 0.45rem;
+  color: var(--text-black);
+}
+
+.star-svg {
+  width: 9.5px;
+  height: 8.5px;
+  fill: currentColor;
+}
+
+.review-publication {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--text-light-gray);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.review-quote {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text-black);
+  line-height: 1.25;
+}
+
+/* --------------------------------------------------------------------------
+   6. Download Results Modal
+   -------------------------------------------------------------------------- */
+.download-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.download-modal-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.download-card {
+  width: 92%;
+  max-width: 580px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.8rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  position: relative;
+  transform: translateY(20px) scale(0.96);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.download-modal-backdrop.open .download-card {
+  transform: translateY(0) scale(1);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #777777;
+  cursor: pointer;
+  padding: 0.2rem;
+  transition: color 0.15s ease;
+}
+
+.modal-close-btn:hover {
+  color: var(--text-black);
+}
+
+/* Loading State */
+.modal-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.spinner-ring {
+  width: 44px;
+  height: 44px;
+  border: 3.5px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--text-black);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1.2rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-black);
+  margin-bottom: 0.4rem;
+}
+
+.loading-desc {
+  font-size: 0.85rem;
+  color: var(--text-gray);
+}
+
+/* Ready State */
+.media-preview-header {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.media-thumb-wrap {
+  position: relative;
+  width: 140px;
+  height: 84px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111111;
+  flex-shrink: 0;
+}
+
+.media-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media-thumb-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.media-duration-tag {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+}
+
+.media-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.detected-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-black);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-bottom: 0.35rem;
+}
+
+.media-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-black);
+  line-height: 1.3;
+  margin-bottom: 0.3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.media-uploader {
+  font-size: 0.78rem;
+  color: var(--text-light-gray);
+}
+
+/* Format Tabs */
+.format-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-line);
+  margin-bottom: 1rem;
+}
+
+.format-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.format-tab:hover {
+  color: var(--text-black);
+}
+
+.format-tab.active {
+  color: var(--text-black);
+  border-bottom-color: var(--text-black);
+}
+
+/* Quality Item Rows */
+.quality-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.quality-item:last-child {
+  border-bottom: none;
+}
+
+.q-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.q-res {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-black);
+}
+
+.q-codec {
+  font-size: 0.75rem;
+  color: var(--text-light-gray);
+  margin-top: 0.1rem;
+}
+
+.q-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.q-size {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-gray);
+}
+
+.action-dl-btn {
+  background: var(--text-black);
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 38px;
+}
+
+.action-dl-btn:hover {
+  background: #333333;
+  transform: translateY(-1px);
+}
+
+.action-dl-btn:active {
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   7. Toast Notification
+   -------------------------------------------------------------------------- */
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #0c0c0c;
+  color: #ffffff;
+  padding: 0.8rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 300;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   8. Mobile-First Responsive Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .testimonial-columns {
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .experience-viewport {
+    padding: 1.2rem 1.2rem;
+  }
+
+  .header-nav {
+    top: 0.75rem;
+  }
+
+  .nav-center {
+    padding: 0.35rem 1rem;
+  }
+
+  .nav-list {
+    gap: 1.2rem;
+  }
+
+  .experience-info {
+    position: absolute;
+    top: 3.6rem;
+    left: 1.2rem;
+    right: 1.2rem;
+    width: auto;
+    pointer-events: none;
+  }
+
+  .film-title-heading {
+    font-size: 1.7rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .platform-badge {
+    font-size: 0.58rem;
+    padding: 0.15rem 0.4rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .metadata-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 0.8rem;
+    width: 100%;
+    max-width: 360px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-line);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .meta-row {
+    border: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metadata-table .meta-row:last-child {
+    border-bottom: none;
+  }
+
+  .meta-label {
+    font-size: 0.55rem;
+    color: var(--text-light-gray);
+    padding: 0;
+  }
+
+  .meta-value {
+    font-size: 0.72rem;
+    text-align: left;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+
+  /* Dock adjustments for mobile */
+  .download-dock-container {
+    bottom: 1.2rem;
+    width: 100%;
+    max-width: calc(100% - 1.4rem);
+    padding: 0;
+    gap: 0.5rem;
+    z-index: 50;
+  }
+
+  .download-dock {
+    padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+  }
+
+  .url-input {
+    font-size: 16px; /* Prevents auto-zoom in mobile Safari */
+  }
+
+  .dock-btn {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .paste-btn {
+    padding: 0.55rem 0.75rem;
+    margin-right: 0.3rem;
+  }
+
+  .demo-chips {
+    gap: 0.35rem;
+  }
+
+  .demo-chip {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  /* Bottom social proof hidden on compact mobile screens */
+  .testimonial-section {
+    display: none;
+  }
+
+  /* Bottom sheet modal styling for mobile */
+  .download-modal-backdrop {
+    align-items: flex-end;
+  }
+
+  .download-card {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 1.4rem 1.2rem 2rem;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+  }
+
+  .download-modal-backdrop.open .download-card {
+    transform: translateY(0);
+  }
+
+  .media-preview-header {
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .media-thumb-wrap {
+    width: 110px;
+    height: 70px;
+  }
+
+  .media-title {
+    font-size: 0.88rem;
+  }
+
+  .action-dl-btn {
+    min-height: 44px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.82rem;
+  }
+
+  .index-dropdown {
+    width: calc(100vw - 2rem);
+    max-height: 60vh;
+  }
+}
+
+@media (max-width: 480px) {
+  #navAudioRipper {
+    display: none;
+  }
+
+  .nav-list {
+    gap: 0.85rem;
+  }
+
+  .download-btn span {
+    display: none;
+  }
+
+  .download-btn {
+    padding: 0.65rem 0.9rem;
+  }
+}

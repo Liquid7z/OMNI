@@ -1,0 +1,27 @@
+{
+  "name": "omni-downloader",
+  "version": "1.0.0",
+  "description": "Universal 3D Vinyl Video & Audio Downloader Web Application",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "video-downloader",
+    "audio-ripper",
+    "youtube",
+    "instagram",
+    "terabox",
+    "tiktok",
+    "threejs",
+    "webgl"
+  ],
+  "author": "OMNI",
+  "license": "MIT"
+}
+
