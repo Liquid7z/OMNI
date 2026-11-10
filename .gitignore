@@ -13,4 +13,10 @@ cookies.txt
 .env
 .env.*
 
+# Temporary testing & scratch files
+scratch/
+*.png
+*.jpg
+
+
 

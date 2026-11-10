@@ -138,6 +138,29 @@ html, body {
   font-weight: 600;
 }
 
+#navRewindRadio {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+.radio-live-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+  animation: rr-live-dot-pulse 2s infinite ease-out;
+}
+
+@keyframes rr-live-dot-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
 .nav-dot {
   position: absolute;
   bottom: -6px;
@@ -1809,4 +1832,17 @@ html, body {
     padding: 1rem 1.2rem calc(1rem + var(--safe-bottom));
     overflow-y: auto;
   }
+}
+/* Warm gradient keyframes */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Class for applying gradient background */
+.animated-gradient-bg {
+  background: linear-gradient(-45deg, #F6EBDD, #EBD9B9, #D7BE98, #C88C52, #A5A17A);
+  background-size: 300% 300%;
+  animation: gradientShift 20s ease-in-out infinite alternate;
 }

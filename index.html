@@ -12,7 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.2">
+  <link rel="stylesheet" href="rewind_radio.css?v=2.2">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body class="theme-light">
@@ -35,13 +36,16 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link active">
+          <a href="#downloader" class="nav-link active" id="navDownloader">
             <span>Downloader</span>
             <span class="nav-dot"></span>
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" id="navAudioRipper">Audio Ripper</a>
+          <a href="#rewind" class="nav-link" id="navRewindRadio">
+            <span class="radio-live-indicator"></span>
+            <span>Rewind Radio</span>
+          </a>
         </li>
         <li class="nav-item">
           <button class="nav-link nav-btn" id="indexToggleBtn" aria-expanded="false">
@@ -187,6 +191,959 @@
 
   </main>
 
+  <!-- ========================================================================
+       REWIND RADIO: Apple Liquid Glass & Dynamic Island Music Experience
+       ======================================================================== -->
+  <div class="rewind-view-container" id="rewindRadioView" role="region" aria-label="Rewind Radio Music Experience">
+    
+    <!-- Ambient Dynamic Glow Backdrop -->
+    <div class="rr-ambient-backdrop" id="rrAmbientBackdrop" aria-hidden="true"></div>
+
+    <!-- Minimal Clean Header Bar -->
+    <header class="rr-top-nav-bar">
+      <div class="rr-nav-left">
+        <div class="rr-brand-badge" id="rrBrandBadge">
+          <div class="rr-brand-icon" aria-hidden="true">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+          </div>
+          <span class="rr-brand-name">REWIND <span>RADIO</span></span>
+        </div>
+        <div class="rr-listener-pill" id="rrListenerPill" title="Connected real-time listeners">
+          <span class="live-pulse-dot" id="rrListenerPulseDot"></span>
+          <span class="listener-text" id="rrListenerCount">🟢 128 listening now</span>
+        </div>
+      </div>
+
+      <!-- Center Dynamic Island Controller (Fixed & Non-Overlapping) -->
+      <div class="rr-dynamic-island-anchor" id="rrDynamicIslandAnchor">
+        <div class="rr-dynamic-island" id="rrDynamicIsland" role="button" tabindex="0" aria-expanded="false" aria-label="Dynamic Island Music Controller" title="Click to expand music player">
+          <!-- Collapsed Island Pill -->
+          <div class="di-collapsed" id="diCollapsed">
+            <div class="di-left-wrap">
+              <img class="di-thumb" id="diThumb" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hqdefault.jpg" alt="Track Art">
+              <div class="di-meta">
+                <span class="di-title" id="diTitle">Select a track</span>
+                <span class="di-artist" id="diArtist">Rewind Radio</span>
+              </div>
+            </div>
+            <div class="di-right-wrap">
+              <div class="di-waveform" id="diWaveform" aria-label="Live audio playback waveform">
+                <span class="di-wave-bar bar-1"></span>
+                <span class="di-wave-bar bar-2"></span>
+                <span class="di-wave-bar bar-3"></span>
+                <span class="di-wave-bar bar-4"></span>
+              </div>
+              <button class="di-quick-play-btn" id="diQuickPlayBtn" type="button" aria-label="Play or Pause">
+                <svg class="di-quick-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Expanded Island Surface -->
+          <div class="di-expanded" id="diExpanded" style="display:none;">
+            <div class="di-exp-top-bar" id="diExpTopBar" title="Click to collapse">
+              <button class="di-collapse-btn" id="diCollapseBtn" type="button" aria-label="Collapse Dynamic Island">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="di-exp-badge">
+                <span class="di-live-dot"></span>
+                <span>DYNAMIC ISLAND</span>
+              </div>
+              <button class="di-queue-toggle-btn" id="diQueueToggleBtn" type="button" aria-label="Queue">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </button>
+            </div>
+
+            <div class="di-exp-main-row">
+              <img class="di-exp-thumb" id="diExpThumb" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hqdefault.jpg" alt="Track Art">
+              <div class="di-exp-info">
+                <span class="di-exp-title" id="diExpTitle">Select a track</span>
+                <span class="di-exp-artist" id="diExpArtist">Rewind Radio</span>
+              </div>
+              <div class="di-waveform di-waveform-large" id="diWaveformLarge">
+                <span class="di-wave-bar bar-1"></span>
+                <span class="di-wave-bar bar-2"></span>
+                <span class="di-wave-bar bar-3"></span>
+                <span class="di-wave-bar bar-4"></span>
+                <span class="di-wave-bar bar-5"></span>
+              </div>
+            </div>
+
+            <!-- Scrub Bar -->
+            <div class="di-exp-scrub-row">
+              <span class="di-time" id="diCurTime">0:00</span>
+              <div class="di-scrub-wrap">
+                <input type="range" class="di-scrub-slider" id="diScrubSlider" min="0" max="100" value="0" aria-label="Seek track">
+                <div class="di-scrub-fill" id="diScrubFill"></div>
+              </div>
+              <span class="di-time" id="diDurTime">0:00</span>
+            </div>
+
+            <!-- Dynamic Island Mini Lyric Ticker -->
+            <div class="di-lyric-ticker" id="diLyricTicker" role="button" tabindex="0" title="Click to view full lyrics">
+              <span class="di-lyric-icon">🎙️</span>
+              <span class="di-lyric-text" id="diLyricText">Live synchronized lyrics...</span>
+            </div>
+
+            <!-- Interactive Controls -->
+            <div class="di-exp-controls">
+              <button class="di-ctrl-btn" id="diShuffleBtn" type="button" aria-label="Shuffle">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              </button>
+              <button class="di-ctrl-btn" id="diPrevBtn" type="button" aria-label="Previous">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
+              </button>
+              <button class="di-hero-play-btn" id="diHeroPlayBtn" type="button" aria-label="Play or Pause">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="di-ctrl-btn" id="diNextBtn" type="button" aria-label="Next">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
+              </button>
+              <button class="di-ctrl-btn" id="diRepeatBtn" type="button" aria-label="Repeat">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Action & Downloader Switcher -->
+      <div class="rr-nav-right">
+        <button class="rr-switch-downloader-btn" id="rrSwitchDownloaderBtn" type="button" title="Switch to OMNI Media Downloader">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Downloader</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Dedicated Music Sections Navigation Bar (Zero Overlap with Dynamic Island) -->
+    <nav class="rr-sub-nav-bar" id="rrSubNavBar" aria-label="Music Sections">
+      <div class="rr-sub-nav-inner">
+        <button class="rr-tab-btn active" id="rrTabHome" type="button" data-tab="home">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Home</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabSearch" type="button" data-tab="search">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabRandom" type="button" data-tab="random">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+          <span>Play Random</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabHits" type="button" data-tab="hits">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Top Hits</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabCar" type="button" data-tab="car">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 17h14v-5l-2-6H7L5 12v5z"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>
+          <span>Car Walla</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabBike" type="button" data-tab="bike">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 11l3-3 3 3-1 6.5"/></svg>
+          <span>Bike Walla</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabLibrary" type="button" data-tab="library">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Your Library</span>
+        </button>
+        <button class="rr-tab-btn" id="rrTabNowPlaying" type="button" data-tab="nowplaying">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <span>Now Playing</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- TAB 1: HOME VIEW (Personalized Discovery) -->
+    <main class="rr-tab-content active" id="rrViewHome">
+      <!-- Minimal Hero Greeting -->
+      <section class="rr-home-hero-section">
+        <div class="rr-hero-badge-wrap">
+          <span class="rr-tagline-badge">PURANE GAANE · WAHI YAADEIN</span>
+        </div>
+        <h1 class="rr-hero-heading" id="rrMainGreeting">What are we listening to?</h1>
+        <p class="rr-hero-subtitle">Tap below for smart discovery or immerse in tailored road trip collections</p>
+      </section>
+
+      <!-- HERO CENTERPIECE: Large Vintage Cassette Artwork & Floating Desk Note -->
+      <section class="rr-centerpiece-stage" aria-label="Vintage Cassette Showcase">
+        <div class="rr-centerpiece-grid">
+
+          <!-- 1. Large Retro Vintage Cassette Artwork -->
+          <div class="rr-cassette-container" id="rrCassetteContainer" role="region" aria-label="Vintage Cassette Player">
+            <div class="rr-cassette-glow" id="rrCassetteGlow"></div>
+            <div class="rr-cassette-shell" id="rrCassetteShell">
+              <!-- Screws -->
+              <span class="cassette-screw top-left"></span>
+              <span class="cassette-screw top-right"></span>
+              <span class="cassette-screw bot-left"></span>
+              <span class="cassette-screw bot-right"></span>
+              
+              <!-- Top Header -->
+              <div class="cassette-header">
+                <span class="cassette-brand">REWIND <span>AUDIO MASTER</span></span>
+                <span class="cassette-type">TYPE I · NORMAL BIAS · EQ 120µs</span>
+                <span class="cassette-side">SIDE A</span>
+              </div>
+
+              <!-- Main Label Area with Album Artwork & Track Info -->
+              <div class="cassette-label-wrap">
+                <div class="cassette-label-top">
+                  <div class="label-track-meta">
+                    <span class="cassette-hi-fi">C-90 STEREO HI-FI</span>
+                    <h3 class="cassette-track-title" id="rrCassetteTitle">Die With A Smile</h3>
+                    <p class="cassette-track-artist" id="rrCassetteArtist">Lady Gaga & Bruno Mars</p>
+                  </div>
+                  <div class="cassette-label-art">
+                    <img class="cassette-album-img" id="rrCassetteAlbumImg" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hq720.jpg" alt="Album Art">
+                  </div>
+                </div>
+
+                <!-- Tape Viewing Window & Dual Spinning Reels -->
+                <div class="cassette-window-chamber">
+                  <!-- Left Spool & Reel -->
+                  <div class="cassette-reel reel-left" id="rrReelLeft">
+                    <div class="tape-pack tape-pack-left"></div>
+                    <div class="reel-hub">
+                      <span class="hub-spoke s1"></span>
+                      <span class="hub-spoke s2"></span>
+                      <span class="hub-spoke s3"></span>
+                      <span class="hub-center"></span>
+                    </div>
+                  </div>
+
+                  <!-- Center Tape Guide & Level Gauge -->
+                  <div class="tape-window-center">
+                    <div class="tape-ruler">
+                      <span>100</span><span>50</span><span>0</span>
+                    </div>
+                    <div class="tape-ribbon-path"></div>
+                  </div>
+
+                  <!-- Right Spool & Reel -->
+                  <div class="cassette-reel reel-right" id="rrReelRight">
+                    <div class="tape-pack tape-pack-right"></div>
+                    <div class="reel-hub">
+                      <span class="hub-spoke s1"></span>
+                      <span class="hub-spoke s2"></span>
+                      <span class="hub-spoke s3"></span>
+                      <span class="hub-center"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom Label Bar -->
+                <div class="cassette-label-bottom">
+                  <span class="cassette-nr">DOLBY B-NR [ON]</span>
+                  <span class="cassette-time-tag" id="rrCassetteTimeTag">0:00 / 4:12</span>
+                  <span class="cassette-mfg">MADE IN JAPAN · CHROME CASSETTE</span>
+                </div>
+              </div>
+
+              <!-- Bottom Trapezoid Head Chamber -->
+              <div class="cassette-bottom-chamber">
+                <span class="guide-roller roller-left"></span>
+                <span class="head-aperture"></span>
+                <span class="guide-roller roller-right"></span>
+              </div>
+
+              <!-- Glass Reflection Layer -->
+              <div class="cassette-reflection" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <!-- 2. Floating Random Inspirational Message Note (Desk Note Style) -->
+          <div class="rr-message-card-wrapper" id="rrMessageWrapper">
+            <div class="rr-message-desk-note" id="rrMessageNote" role="button" tabindex="0" title="Click for next inspiring thought">
+              <!-- Vintage Tape Strip / Clip Accent -->
+              <div class="rr-note-tape" aria-hidden="true"></div>
+              
+              <!-- Category Pill -->
+              <div class="rr-note-header">
+                <span class="rr-note-category-pill" id="rrNoteCategory">✦ KINDNESS &amp; LIFE</span>
+                <button class="rr-note-next-btn" id="rrNoteNextBtn" type="button" aria-label="Next Thought" title="Next thought">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  <span>Next</span>
+                </button>
+              </div>
+
+              <!-- Note Editorial Message Content -->
+              <div class="rr-note-body">
+                <span class="rr-quote-mark start">“</span>
+                <p class="rr-note-text" id="rrNoteText">Be silly. Be honest. Be kind.</p>
+                <span class="rr-quote-mark end">”</span>
+              </div>
+
+              <!-- Note Footer -->
+              <div class="rr-note-footer">
+                <span class="rr-note-watermark">REWIND RADIO · YAADEIN</span>
+                <span class="rr-note-hint">Tap note to refresh</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4 MAIN DISCOVERY OPTIONS (2x2 Mobile, 4-Col Desktop) -->
+      <section class="rr-discovery-section">
+        <div class="rr-discovery-grid">
+
+          <!-- OPTION 1: PLAY RANDOM -->
+          <div class="rr-opt-card opt-random" id="rrCardPlayRandom" role="button" tabindex="0">
+            <div class="opt-card-inner">
+              <div class="opt-header-row">
+                <span class="opt-pill pill-random">SMART SHUFFLE</span>
+                <span class="opt-live-indicator">
+                  <span class="pulse-dot"></span>
+                  <span>INSTANT PLAY</span>
+                </span>
+              </div>
+              <div class="opt-icon-circle icon-random">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              </div>
+              <div class="opt-card-text">
+                <h2 class="opt-card-title">PLAY RANDOM</h2>
+                <p class="opt-card-desc">Smart recommendation discovery across trending viral, 90s romance & golden legends</p>
+              </div>
+              <div class="opt-action-bar">
+                <span class="opt-play-button">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>Play Now</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OPTION 2: TOP HITS -->
+          <div class="rr-opt-card opt-hits" id="rrCardTopHits" role="button" tabindex="0">
+            <div class="opt-card-inner">
+              <div class="opt-header-row">
+                <span class="opt-pill pill-hits">VIRAL CHARTS</span>
+                <span class="opt-count-tag" id="rrHitsCountTag">Verified Hits</span>
+              </div>
+              <div class="opt-icon-circle icon-hits">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              </div>
+              <div class="opt-card-text">
+                <h2 class="opt-card-title">TOP HITS</h2>
+                <p class="opt-card-desc">Verified viral chartbusters: Die With A Smile, Tauba Tauba, Espresso, Chaleya</p>
+              </div>
+              <div class="opt-action-bar">
+                <span class="opt-explore-button">
+                  <span>Explore Hits</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OPTION 3: CAR WALLA -->
+          <div class="rr-opt-card opt-car" id="rrCardCarWalla" role="button" tabindex="0">
+            <div class="opt-card-inner">
+              <div class="opt-header-row">
+                <span class="opt-pill pill-car">LONG DRIVE</span>
+                <span class="opt-count-tag">Highway Edition</span>
+              </div>
+              <div class="opt-icon-circle icon-car">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.3-.1.6-.1.9v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+              </div>
+              <div class="opt-card-text">
+                <h2 class="opt-card-title">CAR WALLA</h2>
+                <p class="opt-card-desc">Curated for driving: Highway Vibes, Long Drive Bollywood, Night Drive, Bass & Beats</p>
+              </div>
+              <div class="opt-action-bar">
+                <span class="opt-explore-button">
+                  <span>Open Car Mode</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OPTION 4: BIKE WALLA -->
+          <div class="rr-opt-card opt-bike" id="rrCardBikeWalla" role="button" tabindex="0">
+            <div class="opt-card-inner">
+              <div class="opt-header-row">
+                <span class="opt-pill pill-bike">ADRENALINE</span>
+                <span class="opt-count-tag">Ride Mode</span>
+              </div>
+              <div class="opt-icon-circle icon-bike">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L8.5 10H5m10 7.5-3-6 3-4h3"/></svg>
+              </div>
+              <div class="opt-card-text">
+                <h2 class="opt-card-title">BIKE WALLA</h2>
+                <p class="opt-card-desc">Motorcycle rides: Adrenaline cruiser, Highway Anthems, Night Rider & Punjabi Ride</p>
+              </div>
+              <div class="opt-action-bar">
+                <span class="opt-explore-button">
+                  <span>Open Bike Mode</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Small Recently Played Section (Shown when tracks have been played) -->
+      <section class="rr-home-section rr-recently-played-section" id="rrRecentlyPlayedSection" style="display: none;">
+        <div class="rr-section-title-bar">
+          <div class="title-wrap">
+            <h2 class="rr-section-heading">Recently Played</h2>
+            <span class="rr-section-sub">Pick up right where you left off</span>
+          </div>
+          <button class="rr-clear-link-btn" id="rrClearRecentBtn" type="button">Clear</button>
+        </div>
+        <div class="rr-media-carousel" id="rrRecentlyPlayedCarousel"></div>
+      </section>
+    </main>
+
+    <!-- TAB 2: SEARCH VIEW -->
+    <main class="rr-tab-content" id="rrViewSearch" style="display: none;">
+      <section class="rr-search-input-section">
+        <div class="rr-search-box">
+          <svg class="search-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="rrSearchInput" class="rr-search-field" placeholder="Search Hindi, English, Punjabi, 90s, artists, songs..." autocomplete="off" spellcheck="false">
+          <button class="rr-search-clear" id="rrSearchClearBtn" type="button" aria-label="Clear search">✕</button>
+          
+          <!-- Live Instant Autocomplete Suggestions Dropdown -->
+          <div class="rr-search-suggestions" id="rrSearchSuggestions" style="display: none;"></div>
+        </div>
+
+        <!-- Recent Searches Row -->
+        <div class="rr-recent-searches-row" id="rrRecentSearchesRow" style="display: none;">
+          <span class="recent-label">Recent Searches:</span>
+          <div class="recent-chips" id="rrRecentChips"></div>
+        </div>
+
+        <!-- Universal Provider Filter Tabs: All, YouTube, Spotify -->
+        <div class="rr-search-providers-bar" id="rrSearchProvidersBar">
+          <button class="provider-pill active" data-provider="all" id="rrFilterProviderAll" type="button">
+            <span>All Platforms</span>
+          </button>
+          <button class="provider-pill" data-provider="youtube" id="rrFilterProviderYt" type="button">
+            <span class="provider-dot yt-dot"></span>
+            <span>YouTube Music</span>
+          </button>
+          <button class="provider-pill" data-provider="spotify" id="rrFilterProviderSp" type="button">
+            <span class="provider-dot sp-dot"></span>
+            <span>Spotify</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Browse Categories / Genres Tiles (Shown when search query is empty) -->
+      <section class="rr-search-browse-section" id="rrSearchBrowseSection">
+        <h2 class="rr-section-heading" style="margin-bottom: 1.25rem;">Browse All Categories</h2>
+        <div class="rr-categories-grid" id="rrCategoriesGrid"></div>
+      </section>
+
+      <!-- Dynamic Search Results (Shown when user types query) -->
+      <section class="rr-search-results-section" id="rrSearchResultsSection" style="display: none;">
+        <div class="rr-results-layout" id="rrResultsLayout">
+          <div class="rr-top-result-col" id="rrTopResultCol">
+            <h3 class="results-subheading">Top Result</h3>
+            <div class="rr-top-result-card" id="rrTopResultCard"></div>
+          </div>
+          <div class="rr-songs-result-col" id="rrSongsResultCol">
+            <h3 class="results-subheading">Songs & Streams</h3>
+            <div class="rr-songs-list" id="rrSongsResultList"></div>
+          </div>
+        </div>
+        
+        <!-- Pagination Load More -->
+        <div class="rr-search-pagination-row" id="rrSearchPaginationRow" style="display: none;">
+          <button class="rr-load-more-btn" id="rrSearchLoadMoreBtn" type="button">
+            <span>Load More Results</span>
+          </button>
+        </div>
+
+        <div class="rr-search-empty-state" id="rrSearchEmptyState" style="display: none;">
+          <span class="empty-icon">🔍</span>
+          <h3>No results found for "<span id="rrEmptyQuerySpan"></span>"</h3>
+          <p>Please check your spelling, or try searching for another artist or song title.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 3: YOUR LIBRARY VIEW -->
+    <main class="rr-tab-content" id="rrViewLibrary" style="display: none;">
+      <section class="rr-library-header-section">
+        <div class="rr-library-hero-row">
+          <div class="rr-liked-hero-card" id="rrLikedHeroCard">
+            <div class="liked-heart-badge">♥</div>
+            <div class="liked-meta">
+              <span class="playlist-label">PLAYLIST</span>
+              <h2 class="liked-title">Liked Songs</h2>
+              <span class="liked-count" id="rrLikedCountLabel">0 liked songs</span>
+            </div>
+            <button class="liked-play-btn" id="rrPlayLikedBtn" type="button" aria-label="Play all liked songs">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="rr-library-tabs-row">
+          <button class="lib-pill active" id="rrLibPillLiked" data-lib-filter="liked" type="button">Liked Songs</button>
+          <button class="lib-pill" id="rrLibPillMixes" data-lib-filter="mixes" type="button">Daily Mixes</button>
+          <button class="lib-pill" id="rrLibPillHistory" data-lib-filter="history" type="button">Listening History</button>
+        </div>
+      </section>
+
+      <!-- Library Tab Contents -->
+      <section class="rr-library-content-section">
+        <div class="rr-lib-pane active" id="rrLibLikedPane">
+          <div class="rr-songs-list" id="rrLibraryLikedList"></div>
+          <div class="rr-lib-empty" id="rrLikedEmpty" style="display: none;">
+            <p>Songs you like with the heart icon will appear here.</p>
+          </div>
+        </div>
+
+        <div class="rr-lib-pane" id="rrLibMixesPane" style="display: none;">
+          <div class="rr-daily-mix-grid" id="rrLibraryMixesGrid"></div>
+        </div>
+
+        <div class="rr-lib-pane" id="rrLibHistoryPane" style="display: none;">
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+            <button class="rr-clear-link-btn" id="rrClearLibraryHistoryBtn" type="button">Clear History</button>
+          </div>
+          <div class="rr-songs-list" id="rrLibraryHistoryList"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 4: PLAY RANDOM VIEW (Smart Multi-Signal Discovery) -->
+    <main class="rr-tab-content" id="rrViewRandom" style="display: none;">
+      <section class="rr-collection-hero-section">
+        <div class="rr-collection-hero-badge">
+          <span class="live-pulse-dot"></span>
+          <span>SMART DISCOVERY ENGINE</span>
+        </div>
+        <h1 class="rr-collection-hero-title">Play Random</h1>
+        <p class="rr-collection-hero-desc">Intelligent shuffle curated from verified tracks across 6 nostalgic & trending vibes — zero consecutive repeats.</p>
+
+        <!-- Category Selectors -->
+        <div class="rr-random-categories-grid">
+          <button class="rr-random-cat-card active" data-random-cat="all" type="button">
+            <span class="cat-icon">🎲</span>
+            <div class="cat-info">
+              <strong>Random Everything</strong>
+              <span>Full catalog & trending mix</span>
+            </div>
+          </button>
+          <button class="rr-random-cat-card" data-random-cat="hindi" type="button">
+            <span class="cat-icon">🎬</span>
+            <div class="cat-info">
+              <strong>Bollywood & Hindi</strong>
+              <span>Arijit, KK, Mohit Chauhan & legends</span>
+            </div>
+          </button>
+          <button class="rr-random-cat-card" data-random-cat="english" type="button">
+            <span class="cat-icon">🌍</span>
+            <div class="cat-info">
+              <strong>Global English & Pop</strong>
+              <span>The Weeknd, Coldplay, Ed Sheeran & hits</span>
+            </div>
+          </button>
+          <button class="rr-random-cat-card" data-random-cat="punjabi" type="button">
+            <span class="cat-icon">🥁</span>
+            <div class="cat-info">
+              <strong>Punjabi & Desi Beats</strong>
+              <span>Sidhu Moose Wala, Diljit, Karan Aujla</span>
+            </div>
+          </button>
+          <button class="rr-random-cat-card" data-random-cat="retro" type="button">
+            <span class="cat-icon">📻</span>
+            <div class="cat-info">
+              <strong>90s Golden Retro</strong>
+              <span>Kumar Sanu, Udit Narayan, Alka Yagnik</span>
+            </div>
+          </button>
+          <button class="rr-random-cat-card" data-random-cat="highway" type="button">
+            <span class="cat-icon">🚗</span>
+            <div class="cat-info">
+              <strong>Highway Long Drive</strong>
+              <span>Open road anthems & late night cruise</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="rr-random-actions-row">
+          <button class="rr-random-launch-btn" id="rrRandomLaunchBtn" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Start Smart Shuffle</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Up Next in Random Queue -->
+      <section class="rr-section-block">
+        <h2 class="rr-section-heading">Up Next in Random Queue</h2>
+        <div class="rr-songs-list" id="rrRandomQueueList"></div>
+      </section>
+    </main>
+
+    <!-- TAB 5: TOP HITS VIEW -->
+    <main class="rr-tab-content" id="rrViewHits" style="display: none;">
+      <section class="rr-collection-hero-section">
+        <div class="rr-collection-hero-badge">
+          <span>VIRAL CHARTS</span>
+        </div>
+        <h1 class="rr-collection-hero-title">Top Trending Hits</h1>
+        <p class="rr-collection-hero-desc">The most listened tracks right now across Bollywood, Global Pop, and Desi charts.</p>
+        
+        <div class="rr-collection-actions-row">
+          <button class="rr-hero-action-btn primary" id="rrHitsPlayAllBtn" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Play All</span>
+          </button>
+          <button class="rr-hero-action-btn secondary" id="rrHitsShuffleBtn" type="button">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span>Shuffle</span>
+          </button>
+        </div>
+
+        <div class="rr-collection-filter-bar" id="rrHitsFilterBar">
+          <button class="col-filter-pill active" data-filter="all">All Top Hits</button>
+          <button class="col-filter-pill" data-filter="bollywood">Bollywood Viral</button>
+          <button class="col-filter-pill" data-filter="global">Global Pop</button>
+          <button class="col-filter-pill" data-filter="punjabi">Punjabi Top 50</button>
+          <button class="col-filter-pill" data-filter="retro">90s Evergreen</button>
+        </div>
+      </section>
+
+      <section class="rr-section-block">
+        <div class="rr-songs-list" id="rrHitsTrackList"></div>
+      </section>
+    </main>
+
+    <!-- TAB 6: CAR WALLA (Highway Long Drive Mode) -->
+    <main class="rr-tab-content" id="rrViewCarWalla" style="display: none;">
+      <section class="rr-collection-hero-section">
+        <div class="rr-collection-hero-badge">
+          <span>HIGHWAY DRIVING MODE</span>
+        </div>
+        <h1 class="rr-collection-hero-title">Car Walla</h1>
+        <p class="rr-collection-hero-desc">Open highway vibes, engine rumble, long drives, and midnight cruising beats.</p>
+
+        <div class="rr-collection-actions-row">
+          <button class="rr-hero-action-btn primary" id="rrCarPlayAllBtn" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Play All</span>
+          </button>
+          <button class="rr-hero-action-btn secondary" id="rrCarShuffleBtn" type="button">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span>Shuffle</span>
+          </button>
+        </div>
+
+        <div class="rr-collection-filter-bar" id="rrCarFilterBar">
+          <button class="col-filter-pill active" data-filter="all">All Highway</button>
+          <button class="col-filter-pill" data-filter="highway">Long Drive</button>
+          <button class="col-filter-pill" data-filter="night">Night Cruise</button>
+          <button class="col-filter-pill" data-filter="bass">Bass Boost</button>
+        </div>
+      </section>
+
+      <section class="rr-section-block">
+        <div class="rr-songs-list" id="rrCarTrackList"></div>
+      </section>
+    </main>
+
+    <!-- TAB 7: BIKE WALLA (Rider High-Octane Mode) -->
+    <main class="rr-tab-content" id="rrViewBikeWalla" style="display: none;">
+      <section class="rr-collection-hero-section">
+        <div class="rr-collection-hero-badge">
+          <span>RIDER RUSH MODE</span>
+        </div>
+        <h1 class="rr-collection-hero-title">Bike Walla</h1>
+        <p class="rr-collection-hero-desc">Helmet on, throttle open, high octane Punjabi and electronic adrenaline beats.</p>
+
+        <div class="rr-collection-actions-row">
+          <button class="rr-hero-action-btn primary" id="rrBikePlayAllBtn" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Play All</span>
+          </button>
+          <button class="rr-hero-action-btn secondary" id="rrBikeShuffleBtn" type="button">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span>Shuffle</span>
+          </button>
+        </div>
+
+        <div class="rr-collection-filter-bar" id="rrBikeFilterBar">
+          <button class="col-filter-pill active" data-filter="all">All Rider Rush</button>
+          <button class="col-filter-pill" data-filter="adrenaline">Adrenaline Boost</button>
+          <button class="col-filter-pill" data-filter="night">Night Rider</button>
+          <button class="col-filter-pill" data-filter="punjabi">Punjabi Thump</button>
+        </div>
+      </section>
+
+      <section class="rr-section-block">
+        <div class="rr-songs-list" id="rrBikeTrackList"></div>
+      </section>
+    </main>
+
+    <!-- TAB 8: NOW PLAYING VIEW (Focused Warm Liquid Glass Music Experience) -->
+    <main class="rr-tab-content" id="rrViewNowPlaying" style="display: none;">
+      <div class="rr-nowplaying-wrapper">
+        <div class="rr-np-top-bar">
+          <button class="rr-np-back-btn" id="rrNpBackBtn" type="button">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>Back to Discovery</span>
+          </button>
+          <div class="rr-np-badge">
+            <span class="live-pulse-dot"></span>
+            <span>NOW PLAYING</span>
+          </div>
+          <button class="rr-np-queue-btn" id="rrNpQueueBtn" type="button" aria-label="Toggle Queue">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="rr-np-layout">
+        <div class="rr-np-card-glass">
+          <div class="rr-np-artwork-stage">
+            <div class="rr-np-artwork-glow" id="rrNpArtworkGlow"></div>
+            <img class="rr-np-artwork-img" id="rrNpArtworkImg" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hq720.jpg" alt="Now Playing Art">
+          </div>
+
+          <div class="rr-np-meta-row">
+            <div class="rr-np-meta-info">
+              <h2 class="rr-np-title" id="rrNpTitle">Select a track</h2>
+              <p class="rr-np-artist" id="rrNpArtist">Rewind Radio</p>
+            </div>
+            <button class="rr-np-like-btn" id="rrNpLikeBtn" type="button" aria-label="Save to Liked Songs">
+              <svg class="heart-svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+
+          <div class="rr-np-scrub-row">
+            <div class="rr-scrub-track-container">
+              <input type="range" class="rr-np-scrub-slider" id="rrNpScrubSlider" min="0" max="100" value="0" aria-label="Seek track">
+              <div class="rr-np-scrub-fill" id="rrNpScrubFill"></div>
+            </div>
+            <div class="rr-np-timestamps">
+              <span id="rrNpCurTime">0:00</span>
+              <span id="rrNpDurTime">0:00</span>
+            </div>
+          </div>
+
+          <div class="rr-np-controls">
+            <button class="rr-np-ctrl-btn" id="rrNpShuffleBtn" type="button" aria-label="Shuffle">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            </button>
+            <button class="rr-np-ctrl-btn" id="rrNpPrevBtn" type="button" aria-label="Previous">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
+            </button>
+            <button class="rr-np-hero-play-btn" id="rrNpPlayBtn" type="button" aria-label="Play or Pause">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+            <button class="rr-np-ctrl-btn" id="rrNpNextBtn" type="button" aria-label="Next">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
+            </button>
+            <button class="rr-np-ctrl-btn" id="rrNpRepeatBtn" type="button" aria-label="Repeat">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </button>
+          </div>
+
+          <div class="rr-np-provider-row">
+            <span class="provider-badge-pill" id="rrNpProviderBadge">
+              <span class="provider-dot yt-dot"></span>
+              <span id="rrNpProviderText">YouTube Audio Stream</span>
+            </span>
+            <a class="external-listen-link" id="rrNpExternalLink" href="#" target="_blank" rel="noopener">Open Stream ↗</a>
+          </div>
+        </div>
+
+        <!-- Right Column: Functional Synchronized Animated Lyrics Bar -->
+        <div class="rr-np-lyrics-glass" id="rrNpLyricsPanel">
+          <div class="rr-lyrics-header">
+            <div class="lyrics-header-title">
+              <span class="lyrics-icon">🎙️</span>
+              <span>SYNCHRONIZED LYRICS</span>
+            </div>
+            <span class="lyrics-live-badge"><span class="lyrics-live-dot"></span> Live Karaoke Sync</span>
+          </div>
+
+          <div class="rr-lyrics-scroll-container" id="rrLyricsScrollContainer">
+            <div class="rr-lyrics-list" id="rrLyricsList">
+              <!-- Rendered dynamically via lyricsEngine with real-time gradient sweep -->
+            </div>
+          </div>
+
+          <div class="rr-lyrics-footer">
+            <span class="lyrics-tip">Tap any line to jump directly to timestamp</span>
+          </div>
+        </div>
+      </div>
+      </div>
+    </main>
+
+    <!-- Mobile Fixed Bottom Navigation Bar (Unified SPA) -->
+    <nav class="rr-mobile-bottom-nav" id="rrMobileBottomNav" aria-label="Mobile Navigation">
+      <button class="mob-nav-btn active" id="rrMobNavHome" type="button" data-tab="home">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavSearch" type="button" data-tab="search">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavRandom" type="button" data-tab="random">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+        <span>Random</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavHits" type="button" data-tab="hits">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>Hits</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavCar" type="button" data-tab="car">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 17h14v-5l-2-6H7L5 12v5z"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>
+        <span>Car</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavLibrary" type="button" data-tab="library">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Library</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavNowPlaying" type="button" data-tab="nowplaying">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span>Playing</span>
+      </button>
+      <button class="mob-nav-btn" id="rrMobNavDownloader" type="button">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>OMNI</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Persistent Minimal Bottom Music Player (Spotify-Style) -->
+  <aside class="rr-bottom-player" id="rrBottomPlayer" aria-label="Music Player">
+    <!-- Left: Album Art & Track Meta -->
+    <div class="rr-player-left" id="rrPlayerLeft" title="Click to expand player">
+      <img class="rr-player-thumb" id="rrPlayerThumb" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hqdefault.jpg" alt="Track Artwork">
+      <div class="rr-player-meta">
+        <span class="rr-player-title" id="rrPlayerTitle">Select a song to play</span>
+        <span class="rr-player-artist" id="rrPlayerArtist">Rewind Radio</span>
+      </div>
+      <button class="rr-player-like-btn" id="rrPlayerLikeBtn" type="button" aria-label="Save to Your Liked Songs" title="Save to Liked Songs">
+        <svg class="heart-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
+
+    <!-- Center: Primary Playback Controls & Scrubber -->
+    <div class="rr-player-center">
+      <div class="rr-center-controls">
+        <button class="rr-ctrl-btn" id="rrPlayerShuffleBtn" type="button" title="Enable Shuffle" aria-label="Shuffle">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+        </button>
+        <button class="rr-ctrl-btn" id="rrPlayerPrevBtn" type="button" title="Previous" aria-label="Previous track">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
+        </button>
+        <button class="rr-primary-play-btn" id="rrPlayerPlayBtn" type="button" title="Play or Pause" aria-label="Play">
+          <svg class="play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <button class="rr-ctrl-btn" id="rrPlayerNextBtn" type="button" title="Next" aria-label="Next track">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
+        </button>
+        <button class="rr-ctrl-btn" id="rrPlayerRepeatBtn" type="button" title="Enable Repeat" aria-label="Repeat">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </button>
+      </div>
+      <!-- Animated Dock Lyric Bar -->
+      <div class="rr-dock-lyric-bar" id="rrDockLyricBar" role="button" tabindex="0" title="Click to view full synchronized lyrics">
+        <span class="dock-lyric-mic">🎙️</span>
+        <span class="dock-lyric-text" id="rrDockLyricText">Enjoy the rhythm • Click for Live Lyrics</span>
+      </div>
+      <div class="rr-playback-bar">
+        <span class="rr-time-text" id="rrPlayerCurTime">0:00</span>
+        <div class="rr-progress-slider-wrap">
+          <input type="range" class="rr-progress-range" id="rrPlayerProgressBar" min="0" max="100" value="0" aria-label="Track progress">
+          <div class="rr-progress-fill" id="rrPlayerProgressFill"></div>
+        </div>
+        <span class="rr-time-text" id="rrPlayerDurTime">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Volume, Queue, Expand -->
+    <div class="rr-player-right">
+      <button class="rr-right-btn" id="rrPlayerQueueBtn" type="button" title="Open Queue" aria-label="Queue">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
+      <div class="rr-volume-wrap">
+        <button class="rr-mute-btn" id="rrPlayerMuteBtn" type="button" aria-label="Mute or Unmute">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        <input type="range" class="rr-volume-range" id="rrPlayerVolumeSlider" min="0" max="100" value="80" aria-label="Volume">
+      </div>
+      <button class="rr-right-btn" id="rrPlayerExpandBtn" type="button" title="Expand Full Player" aria-label="Expand Full Player">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       COLLECTION SHEET MODAL (Top Hits, Car Walla, and Bike Walla)
+       ======================================================================== -->
+  <div class="rr-collection-sheet-modal" id="rrCollectionSheet" role="dialog" aria-modal="true" aria-label="Music Collection">
+    <div class="rr-sheet-backdrop" id="rrSheetBackdrop"></div>
+    <div class="rr-sheet-panel">
+      <!-- Drag handle for mobile gesture aesthetic -->
+      <div class="rr-sheet-handle-bar"><span class="sheet-handle"></span></div>
+      
+      <div class="rr-sheet-header">
+        <div class="rr-sheet-header-left">
+          <span class="rr-sheet-badge" id="rrSheetBadge">COLLECTION</span>
+          <h2 class="rr-sheet-title" id="rrSheetTitle">Car Walla</h2>
+          <p class="rr-sheet-desc" id="rrSheetDesc">Highway vibes and long drive anthems</p>
+        </div>
+        <button class="rr-sheet-close-btn" id="rrSheetCloseBtn" type="button" aria-label="Close collection">✕</button>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="rr-sheet-action-row">
+        <button class="rr-sheet-play-all-btn" id="rrSheetPlayAllBtn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Play All</span>
+        </button>
+        <button class="rr-sheet-shuffle-btn" id="rrSheetShuffleBtn" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+          <span>Shuffle</span>
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="rr-sheet-filter-bar" id="rrSheetFilterBar">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+
+      <!-- Track List -->
+      <div class="rr-sheet-track-list" id="rrSheetTrackList">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Note: Full-screen player experience is provided by persistent SPA view #rrViewNowPlaying -->
+
+  <!-- Slide-in Queue Drawer -->
+  <aside class="rr-queue-drawer" id="rrQueueDrawer" aria-label="Playback Queue">
+    <div class="rr-queue-header">
+      <h3 class="rr-queue-title">Playback Queue</h3>
+      <div class="rr-queue-actions">
+        <button class="rr-clear-queue-btn" id="rrClearQueueBtn" type="button">Clear</button>
+        <button class="rr-queue-close-btn" id="rrQueueCloseBtn" type="button" aria-label="Close queue">✕</button>
+      </div>
+    </div>
+    <div class="rr-queue-list" id="rrQueueList"></div>
+  </aside>
+
+  <!-- Hidden Tucked YouTube IFrame Host for Authorized Audio Playback -->
+  <div id="rrYoutubeHost" aria-hidden="true"></div>
+
   <!-- Interactive Download Results Modal -->
   <div class="download-modal-backdrop" id="downloadModal" aria-hidden="true">
     <div class="download-card">
@@ -291,6 +1248,8 @@
   <!-- Toast Notification -->
   <div class="toast-notification" id="toastNotification" aria-live="polite"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.2"></script>
+  <script type="module" src="rewind_radio.js?v=2.2"></script>
+  <script src="components/ui/animated-gradient.js?v=2.2"></script>
 </body>
 </html>

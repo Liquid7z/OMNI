@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { WebSocketServer } from 'ws';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -60,6 +61,99 @@ function sanitizeFilename(name, ext = 'mp4') {
 }
 
 // --------------------------------------------------------------------------
+// Universal Music Discovery & YouTube Dynamic Search Subsystem
+// --------------------------------------------------------------------------
+const musicSearchCache = new Map(); // key -> { tracks, timestamp }
+
+async function queryDynamicYouTubeTracks(query, maxResults = 25) {
+  if (!query || !query.trim()) return [];
+  const cleanQuery = query.trim();
+
+  // 1. YouTube Data API v3 if API key is present
+  if (process.env.YOUTUBE_API_KEY) {
+    try {
+      const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=${maxResults}&q=${encodeURIComponent(cleanQuery)}&key=${process.env.YOUTUBE_API_KEY}`;
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          return data.items.map(item => {
+            const vId = item.id?.videoId || item.id;
+            const thumb = (item.snippet.thumbnails?.high || item.snippet.thumbnails?.medium || item.snippet.thumbnails?.default)?.url || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
+            return {
+              id: `yt-${vId}`,
+              youtubeId: vId,
+              title: item.snippet.title,
+              artist: item.snippet.channelTitle || 'YouTube Music',
+              album: item.snippet.channelTitle || 'YouTube Music',
+              duration: '03:45',
+              durationSeconds: 225,
+              artwork: thumb,
+              provider: 'youtube',
+              isPlayable: true,
+              categories: ['universal', 'youtube']
+            };
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[YOUTUBE API] Request error, falling back to yt-dlp:', e.message);
+    }
+  }
+
+  // 2. Local yt-dlp dynamic search fallback (Zero API key required!)
+  return new Promise((resolve) => {
+    const proc = spawn('yt-dlp', [
+      `ytsearch${maxResults}:${cleanQuery}`,
+      '--dump-json',
+      '--flat-playlist',
+      '--skip-download',
+      '--no-warnings'
+    ]);
+
+    let output = '';
+    proc.stdout.on('data', (d) => { output += d.toString('utf8'); });
+    proc.stderr.on('data', () => {}); // swallow warnings
+
+    proc.on('close', () => {
+      const tracks = [];
+      const lines = output.trim().split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const item = JSON.parse(line.trim());
+          if (item && item.id) {
+            let thumb = `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`;
+            if (Array.isArray(item.thumbnails) && item.thumbnails.length > 0) {
+              thumb = item.thumbnails[item.thumbnails.length - 1].url || thumb;
+            }
+            tracks.push({
+              id: `yt-${item.id}`,
+              youtubeId: item.id,
+              title: item.title || 'Untitled Track',
+              artist: item.uploader || item.channel || 'YouTube Music',
+              album: item.channel || 'YouTube Music',
+              duration: item.duration_string || formatDuration(item.duration),
+              durationSeconds: item.duration || 0,
+              artwork: thumb,
+              provider: 'youtube',
+              isPlayable: true,
+              categories: ['universal', 'youtube']
+            });
+          }
+        } catch (e) {}
+      }
+      resolve(tracks);
+    });
+
+    proc.on('error', (err) => {
+      console.warn('[YT-DLP SEARCH] Process spawn error:', err.message);
+      resolve([]);
+    });
+  });
+}
+
+// --------------------------------------------------------------------------
 // Secure Cookie & Authentication Subsystem (Per Official yt-dlp Cookies Guide)
 // https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp
 // --------------------------------------------------------------------------
@@ -68,6 +162,77 @@ function sanitizeFilename(name, ext = 'mp4') {
 const ALLOWED_BROWSERS = new Set([
   'brave', 'chrome', 'chromium', 'edge', 'firefox', 'opera', 'safari', 'vivaldi', 'whale'
 ]);
+
+// --------------------------------------------------------------------------
+// Real-Time Active Listeners & Activity Subsystem (Rewind Radio WebSocket)
+// --------------------------------------------------------------------------
+// Deduplication: Map<sessionId, { sockets: Set<WebSocket>, lastSeen: number, ip: string }>
+const activeSessions = new Map();
+
+function getActiveListenersCount() {
+  return activeSessions.size;
+}
+
+function broadcastPresence() {
+  const count = getActiveListenersCount();
+  const payload = JSON.stringify({
+    type: 'presence',
+    activeListeners: count,
+    timestamp: Date.now()
+  });
+
+  for (const session of activeSessions.values()) {
+    for (const ws of session.sockets) {
+      if (ws.readyState === 1) { // 1 = OPEN
+        try {
+          ws.send(payload);
+        } catch (e) {
+          // ignore dead socket
+        }
+      }
+    }
+  }
+}
+
+function broadcastActivity(activityMsg, originSessionId) {
+  const payload = JSON.stringify({
+    type: 'activity',
+    message: activityMsg,
+    timestamp: Date.now()
+  });
+
+  for (const [sessId, session] of activeSessions.entries()) {
+    for (const ws of session.sockets) {
+      if (ws.readyState === 1) {
+        try {
+          ws.send(payload);
+        } catch (e) {}
+      }
+    }
+  }
+}
+
+// Periodic cleanup of dead sessions every 25s
+setInterval(() => {
+  const now = Date.now();
+  let changed = false;
+
+  for (const [sessId, session] of activeSessions.entries()) {
+    for (const ws of session.sockets) {
+      if (ws.readyState !== 1 && ws.readyState !== 0) {
+        session.sockets.delete(ws);
+      }
+    }
+    if (session.sockets.size === 0 || (now - session.lastSeen > 60000)) {
+      activeSessions.delete(sessId);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    broadcastPresence();
+  }
+}, 25000);
 
 /**
  * Sanitizes any output to ensure cookies, session tokens, and filesystem paths are never leaked.
@@ -1371,6 +1536,402 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1c. Real-Time Active Listeners Presence route (Rewind Radio)
+  if (pathname === '/api/presence') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      activeListeners: getActiveListenersCount(),
+      timestamp: Date.now()
+    }));
+    return;
+  }
+
+  // 1d. Universal Music Discovery Search (YouTube + Spotify + Built-in Catalog)
+  if (pathname === '/api/music/search') {
+    const q = (parsedUrl.searchParams.get('q') || '').trim();
+    const qLower = q.toLowerCase();
+    const provider = (parsedUrl.searchParams.get('provider') || 'all').toLowerCase();
+    const limit = Math.min(parseInt(parsedUrl.searchParams.get('limit') || '25', 10), 100);
+    const offset = Math.max(parseInt(parsedUrl.searchParams.get('offset') || '0', 10), 0);
+
+    // 1. Check in-memory search cache
+    const cacheKey = `${provider}:${qLower}`;
+    const now = Date.now();
+    let allTracks = null;
+
+    if (musicSearchCache.has(cacheKey)) {
+      const cached = musicSearchCache.get(cacheKey);
+      if (now - cached.timestamp < 3600000) { // 1 hr TTL
+        allTracks = cached.tracks;
+      } else {
+        musicSearchCache.delete(cacheKey);
+      }
+    }
+
+    if (!allTracks) {
+      // Load static catalog
+      let catalog = [];
+      try {
+        const catalogPath = path.join(__dirname, 'rewind_tracks.json');
+        if (fs.existsSync(catalogPath)) {
+          catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+        }
+      } catch (e) {}
+
+      let rawResults = [];
+
+      // Match catalog tracks first
+      for (const track of catalog) {
+        const titleMatch = (track.title || '').toLowerCase().includes(qLower);
+        const artistMatch = (track.artist || '').toLowerCase().includes(qLower);
+        const movieMatch = (track.movie || '').toLowerCase().includes(qLower);
+        const eraMatch = (track.era || '').toLowerCase().includes(qLower);
+        const catMatch = Array.isArray(track.categories) && track.categories.some(c => c.toLowerCase().includes(qLower));
+
+        if (!qLower || titleMatch || artistMatch || movieMatch || eraMatch || catMatch) {
+          if (provider === 'all' || provider === 'youtube') {
+            rawResults.push({
+              id: track.id,
+              youtubeId: track.youtubeId,
+              title: track.title,
+              artist: track.artist,
+              album: track.movie || track.era || 'Rewind Radio',
+              duration: track.duration,
+              durationSeconds: track.durationSeconds,
+              artwork: track.artworkHigh || track.artwork,
+              provider: 'youtube',
+              isPlayable: true,
+              categories: track.categories || []
+            });
+          }
+
+          if (provider === 'all' || provider === 'spotify') {
+            rawResults.push({
+              id: `sp-${track.id}`,
+              youtubeId: track.youtubeId,
+              title: track.title,
+              artist: track.artist,
+              album: track.movie || track.era || 'Rewind Radio',
+              duration: track.duration,
+              durationSeconds: track.durationSeconds,
+              artwork: track.artworkHigh || track.artwork,
+              provider: 'spotify',
+              spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(track.title + ' ' + track.artist)}`,
+              embedUrl: `https://open.spotify.com/embed/track/${track.id}`,
+              isPlayable: true,
+              categories: track.categories || []
+            });
+          }
+        }
+      }
+
+      // If query is present, also fetch dynamic live YouTube tracks!
+      if (q && (provider === 'all' || provider === 'youtube' || provider === 'spotify')) {
+        try {
+          const ytDynamicTracks = await queryDynamicYouTubeTracks(q, 30);
+          for (const ytTrack of ytDynamicTracks) {
+            if (provider === 'all' || provider === 'youtube') {
+              rawResults.push(ytTrack);
+            }
+            if (provider === 'all' || provider === 'spotify') {
+              rawResults.push({
+                ...ytTrack,
+                id: `sp-${ytTrack.youtubeId}`,
+                provider: 'spotify',
+                spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(ytTrack.title + ' ' + ytTrack.artist)}`,
+                embedUrl: `https://open.spotify.com/embed/track/${ytTrack.youtubeId}`
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[SEARCH] Dynamic fetch error:', err.message);
+        }
+      }
+
+      // Deduplicate by provider + youtubeId or title+artist
+      const seen = new Set();
+      allTracks = [];
+      for (const r of rawResults) {
+        const key = `${r.provider}:${r.youtubeId || (r.title.toLowerCase() + ':' + r.artist.toLowerCase())}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          allTracks.push(r);
+        }
+      }
+
+      // Cache the full search results
+      musicSearchCache.set(cacheKey, { tracks: allTracks, timestamp: now });
+    }
+
+    const paginatedTracks = allTracks.slice(offset, offset + limit);
+    const hasMore = (offset + limit) < allTracks.length;
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      query: q,
+      provider,
+      total: allTracks.length,
+      offset,
+      limit,
+      hasMore,
+      tracks: paginatedTracks,
+      hasExternalApiKeys: {
+        youtube: Boolean(process.env.YOUTUBE_API_KEY),
+        spotify: Boolean(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET)
+      }
+    }));
+    return;
+  }
+
+  // 1e. Music Autocomplete Suggestions (Google / YouTube Suggestions)
+  if (pathname === '/api/music/suggestions') {
+    const q = (parsedUrl.searchParams.get('q') || '').trim();
+    if (!q) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, query: '', suggestions: [] }));
+      return;
+    }
+
+    try {
+      const suggestUrl = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(q)}`;
+      const suggestRes = await fetch(suggestUrl);
+      if (suggestRes.ok) {
+        const data = await suggestRes.json();
+        const suggestions = Array.isArray(data[1]) ? data[1] : [];
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, query: q, suggestions }));
+        return;
+      }
+    } catch (e) {
+      console.warn('[SUGGESTIONS] Fetch error:', e.message);
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, query: q, suggestions: [] }));
+    return;
+  }
+
+  // 1f. Smart Multi-Category Random Engine
+  if (pathname === '/api/music/random') {
+    const category = (parsedUrl.searchParams.get('category') || 'all').toLowerCase();
+    const limit = Math.min(parseInt(parsedUrl.searchParams.get('limit') || '20', 10), 50);
+
+    let catalog = [];
+    try {
+      const catalogPath = path.join(__dirname, 'rewind_tracks.json');
+      if (fs.existsSync(catalogPath)) {
+        catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+      }
+    } catch (e) {}
+
+    let matching = [];
+    if (category === 'all' || category === 'everything') {
+      matching = [...catalog];
+    } else {
+      matching = catalog.filter(t => {
+        const cats = Array.isArray(t.categories) ? t.categories.map(c => c.toLowerCase()) : [];
+        const era = (t.era || '').toLowerCase();
+        const movie = (t.movie || '').toLowerCase();
+        if (category === 'hindi' || category === 'bollywood') {
+          return cats.includes('hindi') || cats.includes('bollywood') || cats.includes('retro');
+        }
+        if (category === 'english' || category === 'pop') {
+          return cats.includes('english') || cats.includes('pop') || era.includes('english');
+        }
+        if (category === 'punjabi' || category === 'desi') {
+          return cats.includes('punjabi') || cats.includes('desi');
+        }
+        if (category === 'retro' || category === '90s') {
+          return cats.includes('retro') || cats.includes('90s') || era.includes('90s') || era.includes('80s');
+        }
+        if (category === 'highway' || category === 'car') {
+          return cats.includes('highway') || cats.includes('car');
+        }
+        return cats.includes(category);
+      });
+    }
+
+    if (matching.length === 0) matching = [...catalog];
+
+    // Shuffle
+    const shuffled = [...matching];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      category,
+      total: shuffled.length,
+      tracks: shuffled.slice(0, limit)
+    }));
+    return;
+  }
+
+  // 1g. Dynamic Music Sections & Curated Categories (Top Hits, Car Walla, Bike Walla, Random)
+  if (pathname === '/api/music/section') {
+    const section = (parsedUrl.searchParams.get('section') || 'hits').toLowerCase();
+    const filter = (parsedUrl.searchParams.get('filter') || 'all').toLowerCase();
+    const limit = Math.min(parseInt(parsedUrl.searchParams.get('limit') || '30', 10), 50);
+
+    const cacheKey = `section:${section}:${filter}`;
+    const now = Date.now();
+
+    if (musicSearchCache.has(cacheKey)) {
+      const cached = musicSearchCache.get(cacheKey);
+      if (now - cached.timestamp < 3600000) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          section,
+          filter,
+          total: cached.tracks.length,
+          tracks: cached.tracks.slice(0, limit),
+          fromCache: true
+        }));
+        return;
+      }
+    }
+
+    // Map section + filter to intelligent YouTube search query
+    const SECTION_QUERIES = {
+      hits: {
+        all: 'Top Global & Bollywood Trending Hits 2026',
+        english: 'Top Global English Pop Hits 2026 Official Audio',
+        bollywood: 'Top Bollywood Viral Songs 2026',
+        punjabi: 'Top Punjabi Viral Hits 2026 Karan Aujla Diljit Dosanjh'
+      },
+      car: {
+        all: 'Highway Long Drive Car Songs Hindi English',
+        highway: 'Highway Driving Bass Beats Songs',
+        longdrive: 'Long Drive Bollywood Romantic Songs',
+        night: 'Late Night Drive Cruising Songs Synthwave Hindi English',
+        bass: 'Car Bass Boosted Driving Songs EDM',
+        retro: '90s Bollywood Road Trip Classics',
+        romantic: 'Romantic Road Trip Songs Bollywood English'
+      },
+      bike: {
+        all: 'Motorcycle Riding Songs High Energy Adrenaline',
+        ridemode: 'Bike Ride Mode Fast Beat Anthems',
+        highway: 'Motorcycle Highway Cruiser Rock Electronic',
+        night: 'Night Rider Motorcycle Beats Synthwave',
+        retrorock: 'Classic Retro Rock Motorcycle Anthems',
+        punjabi: 'High Octane Punjabi Bike Riding Songs',
+        classics: 'Long Ride Highway Rock Classics'
+      },
+      random: {
+        all: 'Best Worldwide Music Hits 2026',
+        desi: 'Top Bollywood Punjabi Anthems 2026',
+        global: 'Billboard Hot 100 Hits Official Audio',
+        retro: '90s 2000s Nostalgic Hindi Hits',
+        energy: 'High Energy Adrenaline Workout Songs',
+        chill: 'Chill Acoustic Lo-Fi Aesthetic Songs',
+        highway: 'Open Highway Road Trip Anthems'
+      }
+    };
+
+    const query = (SECTION_QUERIES[section] && SECTION_QUERIES[section][filter])
+      ? SECTION_QUERIES[section][filter]
+      : `${section} ${filter} music songs`;
+
+    let tracks = [];
+
+    // Pull matching tracks from local catalogue first
+    let catalog = [];
+    try {
+      const catalogPath = path.join(__dirname, 'rewind_tracks.json');
+      if (fs.existsSync(catalogPath)) {
+        catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+      }
+    } catch (e) {}
+
+    for (const t of catalog) {
+      const titleLower = (t.title || '').toLowerCase();
+      const artistLower = (t.artist || '').toLowerCase();
+      const langLower = (t.language || '').toLowerCase();
+      const cats = Array.isArray(t.categories) ? t.categories.map(c => c.toLowerCase()) : [];
+
+      let match = false;
+      if (section === 'hits') {
+        if (filter === 'english') match = langLower === 'english';
+        else if (filter === 'bollywood') match = langLower === 'hindi' && t.isTrending;
+        else if (filter === 'punjabi') match = langLower.includes('punjabi') || artistLower.includes('diljit') || artistLower.includes('karan');
+        else match = t.isTrending || cats.includes('top trending mix');
+      } else if (section === 'car') {
+        if (filter === 'highway') match = cats.includes('highway long drive') || titleLower.includes('blinding') || titleLower.includes('starboy');
+        else if (filter === 'longdrive') match = langLower === 'hindi' && (cats.includes('highway long drive') || cats.includes('romantic nostalgia'));
+        else if (filter === 'night') match = titleLower.includes('blinding') || titleLower.includes('starboy') || titleLower.includes('tum hi ho');
+        else if (filter === 'bass') match = titleLower.includes('tauba') || titleLower.includes('stay') || titleLower.includes('espresso');
+        else if (filter === 'retro') match = t.era === '90s' || cats.includes('golden era classics');
+        else if (filter === 'romantic') match = cats.includes('romantic nostalgia');
+        else match = cats.includes('highway long drive') || t.isTrending || t.era === '90s';
+      } else if (section === 'bike') {
+        if (filter === 'ridemode') match = titleLower.includes('blinding') || titleLower.includes('starboy') || titleLower.includes('tauba');
+        else if (filter === 'highway') match = titleLower.includes('levitating') || titleLower.includes('espresso') || cats.includes('highway long drive');
+        else if (filter === 'night') match = titleLower.includes('blinding') || titleLower.includes('stay') || titleLower.includes('birds');
+        else if (filter === 'retrorock') match = cats.includes('golden era classics') || artistLower.includes('kishore');
+        else if (filter === 'punjabi') match = artistLower.includes('diljit') || artistLower.includes('karan');
+        else if (filter === 'classics') match = t.era === '90s' || cats.includes('evergreen hits');
+        else match = t.isTrending || cats.includes('highway long drive');
+      } else if (section === 'random') {
+        match = true;
+      }
+
+      if (match) {
+        tracks.push({
+          id: t.id,
+          youtubeId: t.youtubeId,
+          title: t.title,
+          artist: t.artist,
+          album: t.movie || t.era || 'Rewind Radio',
+          duration: t.duration || '3:30',
+          durationSeconds: t.durationSeconds || 210,
+          artwork: t.artworkHigh || t.artwork,
+          provider: 'youtube',
+          isPlayable: true
+        });
+      }
+    }
+
+    // Now dynamically fetch real live YouTube tracks for this category
+    try {
+      const ytTracks = await queryDynamicYouTubeTracks(query, 25);
+      for (const yt of ytTracks) {
+        tracks.push(yt);
+      }
+    } catch (err) {
+      console.warn(`[SECTION API] Dynamic fetch error for ${section}/${filter}:`, err.message);
+    }
+
+    // Deduplicate by youtubeId
+    const seen = new Set();
+    const uniqueTracks = [];
+    for (const tr of tracks) {
+      const key = tr.youtubeId || (tr.title.toLowerCase() + ':' + tr.artist.toLowerCase());
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueTracks.push(tr);
+      }
+    }
+
+    // Cache
+    musicSearchCache.set(cacheKey, { tracks: uniqueTracks, timestamp: now });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      section,
+      filter,
+      total: uniqueTracks.length,
+      tracks: uniqueTracks.slice(0, limit)
+    }));
+    return;
+  }
+
   // 2. Media Info Extraction Endpoint
   if (pathname === '/api/info' && (req.method === 'POST' || req.method === 'GET')) {
     let targetUrl = parsedUrl.searchParams.get('url');
@@ -1694,12 +2255,115 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     });
 
     const stream = fs.createReadStream(safePath);
     stream.pipe(res);
   });
+});
+
+// --------------------------------------------------------------------------
+// WebSocket Server for Rewind Radio Real-Time Presence & Activity
+// --------------------------------------------------------------------------
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', (ws, req) => {
+  let clientSessionId = null;
+
+  try {
+    const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    clientSessionId = reqUrl.searchParams.get('sessionId');
+  } catch (e) {}
+
+  if (!clientSessionId) {
+    clientSessionId = `sess_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
+  }
+
+  // Register session (deduplicated by sessionId)
+  let session = activeSessions.get(clientSessionId);
+  if (!session) {
+    session = { sockets: new Set(), lastSeen: Date.now(), ip: req.socket.remoteAddress };
+    activeSessions.set(clientSessionId, session);
+  }
+  session.sockets.add(ws);
+  session.lastSeen = Date.now();
+
+  // Send initial welcome & presence to connecting client
+  try {
+    ws.send(JSON.stringify({
+      type: 'welcome',
+      sessionId: clientSessionId,
+      activeListeners: getActiveListenersCount(),
+      timestamp: Date.now()
+    }));
+  } catch (e) {}
+
+  // Broadcast updated count across all connected listeners
+  broadcastPresence();
+
+  ws.on('message', (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+      if (session) session.lastSeen = Date.now();
+
+      if (msg.type === 'ping') {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+        }
+      } else if (msg.type === 'init') {
+        if (msg.sessionId && msg.sessionId !== clientSessionId) {
+          // migrate socket to client-persisted sessionId
+          if (session) {
+            session.sockets.delete(ws);
+            if (session.sockets.size === 0) activeSessions.delete(clientSessionId);
+          }
+          clientSessionId = msg.sessionId;
+          session = activeSessions.get(clientSessionId);
+          if (!session) {
+            session = { sockets: new Set(), lastSeen: Date.now(), ip: req.socket.remoteAddress };
+            activeSessions.set(clientSessionId, session);
+          }
+          session.sockets.add(ws);
+          session.lastSeen = Date.now();
+          broadcastPresence();
+        }
+      } else if (msg.type === 'activity') {
+        const safeMessage = typeof msg.message === 'string' ? msg.message.slice(0, 150) : null;
+        if (safeMessage) {
+          broadcastActivity(safeMessage, clientSessionId);
+        }
+      }
+    } catch (err) {
+      // Ignore invalid JSON payloads
+    }
+  });
+
+  const handleDisconnect = () => {
+    if (session) {
+      session.sockets.delete(ws);
+      if (session.sockets.size === 0) {
+        activeSessions.delete(clientSessionId);
+      }
+    }
+    broadcastPresence();
+  };
+
+  ws.on('close', handleDisconnect);
+  ws.on('error', handleDisconnect);
+});
+
+server.on('upgrade', (req, socket, head) => {
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  if (parsedUrl.pathname === '/ws/presence' || parsedUrl.pathname === '/ws') {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+  } else {
+    socket.destroy();
+  }
 });
 
 server.listen(PORT, HOST, () => {
