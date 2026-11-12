@@ -1485,8 +1485,11 @@ html, body {
 
 /* Medium Android Phones (480px down) */
 @media (max-width: 480px) {
-  #navAudioRipper {
-    display: none;
+  #navRewindRadio {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
   }
 
   .nav-list {

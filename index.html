@@ -12,8 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=2.2">
-  <link rel="stylesheet" href="rewind_radio.css?v=2.2">
+  <link rel="stylesheet" href="styles.css?v=2.3">
+  <link rel="stylesheet" href="rewind_radio.css?v=2.3">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body class="theme-light">
@@ -42,9 +42,9 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#rewind" class="nav-link" id="navRewindRadio">
+          <a href="#rewind" class="nav-link" id="navRewindRadio" title="Rewind Audio Experience">
             <span class="radio-live-indicator"></span>
-            <span>Rewind Radio</span>
+            <span>Rewind Audio</span>
           </a>
         </li>
         <li class="nav-item">
@@ -208,7 +208,7 @@
             <span class="bar bar-2"></span>
             <span class="bar bar-3"></span>
           </div>
-          <span class="rr-brand-name">REWIND <span>RADIO</span></span>
+          <span class="rr-brand-name">REWIND <span>AUDIO</span></span>
         </div>
         <div class="rr-listener-pill" id="rrListenerPill" title="Connected real-time listeners">
           <span class="live-pulse-dot" id="rrListenerPulseDot"></span>
@@ -887,99 +887,105 @@
       </section>
     </main>
 
-    <!-- TAB 8: NOW PLAYING VIEW (Focused Warm Liquid Glass Music Experience) -->
+    <!-- TAB 8: NOW PLAYING VIEW (Spotify-Inspired Minimal Music Experience) -->
     <main class="rr-tab-content" id="rrViewNowPlaying" style="display: none;">
       <div class="rr-nowplaying-wrapper">
         <div class="rr-np-top-bar">
-          <button class="rr-np-back-btn" id="rrNpBackBtn" type="button">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            <span>Back to Discovery</span>
+          <button class="rr-np-back-btn" id="rrNpBackBtn" type="button" title="Back to Browse" aria-label="Back">
+            <svg class="np-back-chevron" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <span class="np-back-text">Back to Browse</span>
           </button>
           <div class="rr-np-badge">
             <span class="live-pulse-dot"></span>
-            <span>NOW PLAYING</span>
+            <span id="rrNpBadgeText">PLAYING FROM REWIND</span>
           </div>
-          <button class="rr-np-queue-btn" id="rrNpQueueBtn" type="button" aria-label="Toggle Queue">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          </button>
+          <div class="rr-np-top-actions">
+            <button class="rr-np-lyrics-toggle-btn" id="rrNpMobileLyricsToggle" type="button" aria-label="Toggle Lyrics">
+              <span>🎙️ Lyrics</span>
+            </button>
+            <button class="rr-np-queue-btn" id="rrNpQueueBtn" type="button" aria-label="Toggle Queue" title="Playback Queue">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="rr-np-layout">
-        <div class="rr-np-card-glass">
-          <div class="rr-np-artwork-stage">
-            <div class="rr-np-artwork-glow" id="rrNpArtworkGlow"></div>
-            <img class="rr-np-artwork-img" id="rrNpArtworkImg" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hq720.jpg" alt="Now Playing Art">
-          </div>
-
-          <div class="rr-np-meta-row">
-            <div class="rr-np-meta-info">
-              <h2 class="rr-np-title" id="rrNpTitle">Select a track</h2>
-              <p class="rr-np-artist" id="rrNpArtist">Rewind Radio</p>
+          <!-- Left Column / Main Player: Minimal Spotify Experience -->
+          <div class="rr-np-card-glass" id="rrNpPlayerCard">
+            <div class="rr-np-artwork-stage">
+              <div class="rr-np-artwork-glow" id="rrNpArtworkGlow"></div>
+              <img class="rr-np-artwork-img" id="rrNpArtworkImg" src="https://i.ytimg.com/vi/kPa7bsKwL-c/hq720.jpg" alt="Now Playing Art">
             </div>
-            <button class="rr-np-like-btn" id="rrNpLikeBtn" type="button" aria-label="Save to Liked Songs">
-              <svg class="heart-svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </button>
-          </div>
 
-          <div class="rr-np-scrub-row">
-            <div class="rr-scrub-track-container">
-              <input type="range" class="rr-np-scrub-slider" id="rrNpScrubSlider" min="0" max="100" value="0" aria-label="Seek track">
-              <div class="rr-np-scrub-fill" id="rrNpScrubFill"></div>
+            <div class="rr-np-meta-row">
+              <div class="rr-np-meta-info">
+                <h2 class="rr-np-title" id="rrNpTitle">Select a track</h2>
+                <p class="rr-np-artist" id="rrNpArtist">Rewind Radio</p>
+              </div>
+              <button class="rr-np-like-btn" id="rrNpLikeBtn" type="button" aria-label="Save to Liked Songs">
+                <svg class="heart-svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
             </div>
-            <div class="rr-np-timestamps">
-              <span id="rrNpCurTime">0:00</span>
-              <span id="rrNpDurTime">0:00</span>
+
+            <div class="rr-np-scrub-row">
+              <div class="rr-scrub-track-container">
+                <input type="range" class="rr-np-scrub-slider" id="rrNpScrubSlider" min="0" max="100" value="0" aria-label="Seek track">
+                <div class="rr-np-scrub-fill" id="rrNpScrubFill"></div>
+              </div>
+              <div class="rr-np-timestamps">
+                <span id="rrNpCurTime">0:00</span>
+                <span id="rrNpDurTime">0:00</span>
+              </div>
+            </div>
+
+            <div class="rr-np-controls">
+              <button class="rr-np-ctrl-btn" id="rrNpShuffleBtn" type="button" aria-label="Shuffle" title="Shuffle">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              </button>
+              <button class="rr-np-ctrl-btn" id="rrNpPrevBtn" type="button" aria-label="Previous" title="Previous">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
+              </button>
+              <button class="rr-np-hero-play-btn spotify-green" id="rrNpPlayBtn" type="button" aria-label="Play or Pause" title="Play">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="rr-np-ctrl-btn" id="rrNpNextBtn" type="button" aria-label="Next" title="Next">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
+              </button>
+              <button class="rr-np-ctrl-btn" id="rrNpRepeatBtn" type="button" aria-label="Repeat" title="Repeat">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              </button>
+            </div>
+
+            <div class="rr-np-provider-row">
+              <span class="provider-badge-pill" id="rrNpProviderBadge">
+                <span class="provider-dot yt-dot"></span>
+                <span id="rrNpProviderText">YouTube Audio Stream</span>
+              </span>
+              <a class="external-listen-link" id="rrNpExternalLink" href="#" target="_blank" rel="noopener">Open Stream ↗</a>
             </div>
           </div>
 
-          <div class="rr-np-controls">
-            <button class="rr-np-ctrl-btn" id="rrNpShuffleBtn" type="button" aria-label="Shuffle">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-            </button>
-            <button class="rr-np-ctrl-btn" id="rrNpPrevBtn" type="button" aria-label="Previous">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
-            </button>
-            <button class="rr-np-hero-play-btn" id="rrNpPlayBtn" type="button" aria-label="Play or Pause">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </button>
-            <button class="rr-np-ctrl-btn" id="rrNpNextBtn" type="button" aria-label="Next">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
-            </button>
-            <button class="rr-np-ctrl-btn" id="rrNpRepeatBtn" type="button" aria-label="Repeat">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-            </button>
-          </div>
+          <!-- Right Column: Spotify Synchronized Animated Lyrics Panel -->
+          <div class="rr-np-lyrics-glass" id="rrNpLyricsPanel">
+            <div class="rr-lyrics-header">
+              <div class="lyrics-header-title">
+                <span class="lyrics-icon">🎙️</span>
+                <span>LYRICS</span>
+              </div>
+              <span class="lyrics-live-badge"><span class="lyrics-live-dot"></span> Live Karaoke Sync</span>
+            </div>
 
-          <div class="rr-np-provider-row">
-            <span class="provider-badge-pill" id="rrNpProviderBadge">
-              <span class="provider-dot yt-dot"></span>
-              <span id="rrNpProviderText">YouTube Audio Stream</span>
-            </span>
-            <a class="external-listen-link" id="rrNpExternalLink" href="#" target="_blank" rel="noopener">Open Stream ↗</a>
+            <div class="rr-lyrics-scroll-container" id="rrLyricsScrollContainer">
+              <div class="rr-lyrics-list" id="rrLyricsList">
+                <!-- Rendered dynamically via lyricsEngine with real-time gradient sweep -->
+              </div>
+            </div>
+
+            <div class="rr-lyrics-footer">
+              <span class="lyrics-tip">Tap any line to jump directly to timestamp</span>
+            </div>
           </div>
         </div>
-
-        <!-- Right Column: Functional Synchronized Animated Lyrics Bar -->
-        <div class="rr-np-lyrics-glass" id="rrNpLyricsPanel">
-          <div class="rr-lyrics-header">
-            <div class="lyrics-header-title">
-              <span class="lyrics-icon">🎙️</span>
-              <span>SYNCHRONIZED LYRICS</span>
-            </div>
-            <span class="lyrics-live-badge"><span class="lyrics-live-dot"></span> Live Karaoke Sync</span>
-          </div>
-
-          <div class="rr-lyrics-scroll-container" id="rrLyricsScrollContainer">
-            <div class="rr-lyrics-list" id="rrLyricsList">
-              <!-- Rendered dynamically via lyricsEngine with real-time gradient sweep -->
-            </div>
-          </div>
-
-          <div class="rr-lyrics-footer">
-            <span class="lyrics-tip">Tap any line to jump directly to timestamp</span>
-          </div>
-        </div>
-      </div>
       </div>
     </main>
 
@@ -1248,8 +1254,8 @@
   <!-- Toast Notification -->
   <div class="toast-notification" id="toastNotification" aria-live="polite"></div>
 
-  <script src="app.js?v=2.2"></script>
-  <script type="module" src="rewind_radio.js?v=2.2"></script>
-  <script src="components/ui/animated-gradient.js?v=2.2"></script>
+  <script src="app.js?v=2.3"></script>
+  <script type="module" src="rewind_radio.js?v=2.3"></script>
+  <script src="components/ui/animated-gradient.js?v=2.3"></script>
 </body>
 </html>

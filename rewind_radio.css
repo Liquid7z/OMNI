@@ -756,7 +756,7 @@ body.rewind-active .grain-overlay {
 
 /* Persistent Luxury Glass Player Dock */
 #rrBottomPlayer {
-  display: flex !important;
+  display: flex;
 }
 
 /* --------------------------------------------------------------------------
@@ -1594,9 +1594,6 @@ body.rewind-active .grain-overlay {
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
   border-color: rgba(255, 255, 255, 0.35);
 }
-  background: #FFFFFF;
-  box-shadow: var(--rr-glass-shadow);
-}
 
 .cat-tile-title {
   font-family: var(--rr-font-sans);
@@ -2137,20 +2134,57 @@ body.rewind-active .grain-overlay {
 
   .rr-top-nav-bar {
     height: 54px;
-    padding: 0 12px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .rr-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .rr-brand-name {
-    font-size: 0.92rem;
+    display: inline-flex !important;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: #FFFFFF;
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+
+  .rr-brand-name span {
+    color: #38BDF8;
   }
 
   .rr-listener-pill {
     display: none;
   }
 
+  .rr-dynamic-island-anchor {
+    position: static;
+    transform: none;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    margin: 0 4px;
+    pointer-events: auto;
+  }
+
   .rr-dynamic-island {
-    min-width: 200px;
-    max-width: 250px;
+    min-width: 0;
+    width: 100%;
+    max-width: 175px;
+  }
+
+  .rr-switch-downloader-btn {
+    padding: 5px 9px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .di-collapsed {
@@ -2582,249 +2616,21 @@ body.rewind-active .grain-overlay {
   box-shadow: 0 8px 28px rgba(89, 97, 58, 0.45);
 }
 
-/* Dedicated Now Playing Tab View */
-.rr-nowplaying-wrapper {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 0 0 2rem;
-}
-
-.rr-np-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-}
-
-.rr-np-back-btn, .rr-np-queue-btn {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--rr-border-glass);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--rr-font-sans);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--rr-deep-olive);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.rr-np-back-btn:hover, .rr-np-queue-btn:hover {
-  background: #FFFFFF;
-  transform: translateY(-1px);
-}
-
-.rr-np-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--rr-font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--rr-olive);
-}
-
-.rr-np-card-glass {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(32px) saturate(160%);
-  -webkit-backdrop-filter: blur(32px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 36px;
-  padding: 1.75rem;
-  box-shadow: 0 24px 60px -12px rgba(48, 57, 29, 0.2);
-  text-align: center;
-}
-
-.rr-np-artwork-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 24px;
-  overflow: hidden;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 16px 36px rgba(48, 57, 29, 0.2);
-}
-
-.rr-np-artwork-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.rr-np-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-align: left;
-  margin-bottom: 1.25rem;
-}
-
-.rr-np-meta-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.rr-np-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--rr-deep-olive);
-  margin: 0 0 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rr-np-artist {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--rr-text-muted);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rr-np-like-btn {
-  background: none;
-  border: none;
-  color: var(--rr-text-muted);
-  cursor: pointer;
-  padding: 6px;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.rr-np-like-btn.liked {
-  color: var(--rr-crimson);
-}
-
-.rr-np-like-btn.liked svg {
-  fill: currentColor;
-}
-
-.rr-np-scrub-row {
-  margin-bottom: 1.25rem;
-}
-
-.rr-np-scrub-slider {
-  width: 100%;
-  height: 6px;
-  -webkit-appearance: none;
-  background: rgba(48, 57, 29, 0.1);
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-}
-
-.rr-np-scrub-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--rr-deep-olive);
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.rr-np-timestamps {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--rr-font-mono);
-  font-size: 0.72rem;
-  color: var(--rr-text-muted);
-  margin-top: 6px;
-}
-
-.rr-np-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 1.25rem;
-}
-
-.rr-np-ctrl-btn {
-  background: none;
-  border: none;
-  color: var(--rr-deep-olive);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: transform 0.2s var(--rr-spring), color 0.2s ease;
-}
-
-.rr-np-ctrl-btn:hover {
-  transform: scale(1.15);
-  color: var(--rr-olive);
-}
-
-.rr-np-ctrl-btn.active {
-  color: var(--rr-amber);
-}
-
-.rr-np-hero-play-btn {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: var(--rr-deep-olive);
-  color: #FFFFFF;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(48, 57, 29, 0.3);
-  transition: transform 0.2s var(--rr-spring), background 0.2s ease;
-}
-
-.rr-np-hero-play-btn:hover {
-  transform: scale(1.08);
-  background: var(--rr-olive);
-}
-
-.rr-np-provider-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(48, 57, 29, 0.08);
-}
-
-.provider-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--rr-deep-olive);
-}
-
-.external-listen-link {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--rr-olive);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.external-listen-link:hover {
-  color: var(--rr-deep-olive);
-  text-decoration: underline;
-}
-
 /* ==========================================================================
    PERSISTENT BOTTOM MUSIC PLAYER (Spotify / Apple Music Glass Dock)
    ========================================================================== */
+/* Hide bottom player on Downloader landing unless music is actively playing */
+body:not(.rewind-active):not(.rr-audio-playing) .rr-bottom-player {
+  display: none !important;
+}
+
 .rr-bottom-player {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: 84px;
+  cursor: pointer;
   background: rgba(10, 14, 24, 0.92);
   backdrop-filter: blur(32px) saturate(190%);
   -webkit-backdrop-filter: blur(32px) saturate(190%);
@@ -3113,180 +2919,483 @@ body.rewind-active .grain-overlay {
 }
 
 /* ==========================================================================
-   NOW PLAYING VIEW — DUAL-CARD APPLE MUSIC & SYNCHRONIZED LYRICS
+   NOW PLAYING VIEW — MINIMAL SPOTIFY-INSPIRED MUSIC PLAYER
    ========================================================================== */
-.rr-nowplaying-wrapper {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 1rem 1rem 6rem 1rem;
+
+/* Hide top navbar, sub navbar, dynamic island, mobile bottom nav, and bottom player when full Now Playing page is active on any screen size */
+body.rr-nowplaying-active .rr-top-nav-bar,
+body.rr-nowplaying-active #rrTopNavBar,
+body.rr-nowplaying-active #rrSubNavBar,
+body.rr-nowplaying-active .rr-dynamic-island-anchor,
+body.rr-nowplaying-active #rrMobileBottomNav,
+body.rr-nowplaying-active #rrBottomPlayer,
+body.rr-nowplaying-active .rr-bottom-player {
+  display: none !important;
 }
 
+body.rr-nowplaying-active #rrViewNowPlaying {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2500 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: 100vw !important;
+  margin: 0 !important;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px)) 20px !important;
+  background: #121212 !important;
+  background-image: radial-gradient(circle at 50% 18%, var(--ambient-c1, rgba(29, 185, 84, 0.22)) 0%, transparent 70%), linear-gradient(180deg, #181818 0%, #0c0c0c 100%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-sizing: border-box !important;
+}
+
+.rr-nowplaying-wrapper {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  max-height: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 960px) {
+  .rr-nowplaying-wrapper.show-lyrics {
+    max-width: 980px;
+  }
+}
+
+/* Top Bar: Down chevron (left), Title (center), Lyrics/Queue (right) */
 .rr-np-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  width: 100%;
+  padding: 4px 0 10px 0;
+  flex-shrink: 0;
 }
 
 .rr-np-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
-  font-family: var(--rr-font-sans);
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 7px 16px;
-  border-radius: 9999px;
+  background: none;
+  border: none;
+  color: #A7A7A7;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.rr-np-back-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateX(-2px);
-}
-
-.rr-np-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--rr-font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #06B6D4;
-  letter-spacing: 0.08em;
-}
-
-.rr-np-queue-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
-  width: 36px;
-  height: 36px;
+  padding: 6px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.rr-np-back-btn:hover {
+  color: #FFFFFF;
+  transform: scale(1.15);
+}
+
+.np-back-chevron {
+  width: 24px;
+  height: 24px;
+}
+
+.np-back-text {
+  display: none !important;
+}
+
+.rr-np-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--rr-font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  opacity: 0.9;
+}
+
+.live-pulse-dot {
+  display: none !important;
+}
+
+.rr-np-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rr-np-lyrics-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #E2E8F0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 9999px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.2s ease;
 }
 
+.rr-np-lyrics-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  transform: scale(1.04);
+}
+
+.rr-np-lyrics-toggle-btn.active {
+  background: #1DB954;
+  color: #000000;
+  border-color: #1DB954;
+}
+
+.rr-np-queue-btn {
+  background: none;
+  border: none;
+  color: #A7A7A7;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
 .rr-np-queue-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #06B6D4;
+  color: #FFFFFF;
+  transform: scale(1.15);
 }
 
-/* Dual Column Layout */
+/* Main Layout & Player Card */
 .rr-np-layout {
-  display: grid;
-  grid-template-columns: 440px 1fr;
-  gap: 2rem;
-  align-items: stretch;
-}
-
-@media (max-width: 900px) {
-  .rr-np-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-/* Left Card: 3D Artwork Stage & Controls */
-.rr-np-card-glass {
-  background: rgba(18, 24, 38, 0.75);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  padding: 2rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 0;
+}
+
+.rr-np-card-glass {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 0;
 }
 
 .rr-np-artwork-stage {
   position: relative;
-  width: 100%;
+  width: min(72vw, 360px);
+  height: min(72vw, 360px);
   aspect-ratio: 1 / 1;
-  border-radius: 20px;
+  margin: 0.25rem auto 0.75rem;
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85);
+  background: #181818;
+  flex-shrink: 0;
 }
 
 .rr-np-artwork-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.25) 0%, transparent 70%);
-  filter: blur(24px);
-  pointer-events: none;
+  display: none !important;
 }
 
 .rr-np-artwork-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
 }
 
-.rr-np-artwork-stage:hover .rr-np-artwork-img {
-  transform: scale(1.03);
-}
-
+/* Metadata Row: Song Title, Artist, Heart on Right */
 .rr-np-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  width: 100%;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0 4px;
 }
 
 .rr-np-meta-info {
   flex: 1;
   min-width: 0;
+  padding-right: 12px;
 }
 
 .rr-np-title {
-  font-size: 1.35rem;
+  font-family: var(--rr-font-sans);
+  font-size: 1.45rem;
   font-weight: 700;
   color: #FFFFFF;
+  margin: 0 0 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.02em;
 }
 
 .rr-np-artist {
+  font-family: var(--rr-font-sans);
   font-size: 0.95rem;
   font-weight: 500;
-  color: #94A3B8;
+  color: #A7A7A7;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 4px;
 }
 
-/* Right Card: Synchronized Lyrics View */
-.rr-np-lyrics-glass {
-  background: rgba(18, 24, 38, 0.75);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  padding: 1.75rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+.rr-np-like-btn {
+  background: none;
+  border: none;
+  color: #A7A7A7;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rr-np-like-btn:hover {
+  color: #FFFFFF;
+  transform: scale(1.15);
+}
+
+.rr-np-like-btn.liked {
+  color: #1DB954;
+}
+
+.rr-np-like-btn.liked svg {
+  fill: #1DB954;
+}
+
+/* Scrubber Row */
+.rr-np-scrub-row {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0 4px;
+}
+
+.rr-scrub-track-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.rr-np-scrub-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.rr-np-scrub-slider:hover {
+  height: 6px;
+}
+
+.rr-np-scrub-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.rr-np-timestamps {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--rr-font-mono);
+  font-size: 0.72rem;
+  color: #A7A7A7;
+  margin-top: 5px;
+}
+
+/* Playback Controls Row: Shuffle, Prev, Hero Play, Next, Repeat */
+.rr-np-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0 6px;
+}
+
+.rr-np-ctrl-btn {
+  background: none;
+  border: none;
+  color: #A7A7A7;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.rr-np-ctrl-btn:hover {
+  color: #FFFFFF;
+  transform: scale(1.15);
+}
+
+.rr-np-ctrl-btn.active {
+  color: #1DB954;
+}
+
+/* Spotify White Hero Play Button with Black Icon */
+.rr-np-hero-play-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.rr-np-hero-play-btn:hover {
+  transform: scale(1.08);
+  background: #FFFFFF !important;
+}
+
+/* Provider Row */
+.rr-np-provider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.provider-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #A7A7A7;
+}
+
+.provider-dot.yt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF0000;
+}
+
+.external-listen-link {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1DB954;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.external-listen-link:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+/* Lyrics Panel (Hidden by default, shown when toggled) */
+.rr-np-lyrics-glass {
+  display: none;
+}
+
+/* When lyrics toggle is active on mobile / small screens */
+.rr-np-layout.mobile-lyrics-open .rr-np-card-glass {
+  display: none !important;
+}
+
+.rr-np-layout.mobile-lyrics-open .rr-np-lyrics-glass {
+  display: flex !important;
   flex-direction: column;
-  min-height: 520px;
+  flex: 1;
+  background: rgba(18, 24, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 1.25rem;
+  min-height: 0;
+  width: 100%;
+}
+
+/* When lyrics toggle is active on desktop (min-width: 960px): Beautiful Split View! */
+@media (min-width: 960px) {
+  .show-lyrics .rr-np-layout {
+    display: grid !important;
+    grid-template-columns: 360px 1fr !important;
+    gap: 2rem !important;
+    align-items: stretch !important;
+  }
+
+  .show-lyrics .rr-np-layout .rr-np-card-glass {
+    display: flex !important;
+  }
+
+  .show-lyrics .rr-np-layout .rr-np-artwork-stage {
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 0.75rem;
+  }
+
+  .show-lyrics .rr-np-layout .rr-np-lyrics-glass {
+    display: flex !important;
+    flex-direction: column;
+    background: rgba(18, 24, 38, 0.75);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    min-height: 0;
+  }
 }
 
 .rr-lyrics-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .lyrics-header-title {
@@ -3296,7 +3405,7 @@ body.rewind-active .grain-overlay {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #06B6D4;
+  color: #1DB954;
 }
 
 .lyrics-live-badge {
@@ -3312,22 +3421,23 @@ body.rewind-active .grain-overlay {
   border-radius: 9999px;
 }
 
-.lyrics-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10B981;
-  animation: rr-dot-pulse 1.5s infinite;
-}
-
 .rr-lyrics-scroll-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 1.5rem 0.5rem;
+  padding: 1rem 0.5rem;
   scroll-behavior: smooth;
-  max-height: 480px;
-  mask-image: linear-gradient(180deg, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.rr-lyrics-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rr-lyrics-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
 }
 
 .rr-lyrics-list {
@@ -3337,15 +3447,14 @@ body.rewind-active .grain-overlay {
 }
 
 .rr-lyric-line {
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
   font-size: 1.15rem;
   line-height: 1.5;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.32);
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: left center;
+  transition: all 0.25s ease;
 }
 
 .rr-lyric-line:hover {
@@ -3356,24 +3465,20 @@ body.rewind-active .grain-overlay {
 
 .rr-lyric-line.active {
   color: #FFFFFF;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  background: linear-gradient(90deg, #10B981 0%, #06B6D4 50%, #A855F7 100%);
+  background: linear-gradient(90deg, #10B981 0%, #1DB954 50%, #38BDF8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 35px rgba(6, 182, 212, 0.45);
-  transform: scale(1.04) translateX(6px);
+  text-shadow: 0 0 30px rgba(29, 185, 84, 0.4);
+  transform: scale(1.03) translateX(4px);
 }
 
 .rr-lyrics-footer {
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
-}
-
-.lyrics-tip {
-  font-size: 0.72rem;
-  color: #64748B;
+  flex-shrink: 0;
 }
 
 /* Ensure old fullscreen modal NEVER pops up */

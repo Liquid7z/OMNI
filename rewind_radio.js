@@ -30,6 +30,7 @@ let currentTimeSec = 0;
 let durationSec = 0;
 let progressTicker = null;
 let activeTab = 'home';
+let lastActiveTab = 'home';
 let currentSearchQuery = '';
 let currentSearchProvider = 'all'; // 'all' | 'youtube' | 'spotify'
 let messageRotateTimer = null;
@@ -160,6 +161,10 @@ export function switchView(targetView) {
     }
     document.body.classList.add('rewind-active');
     document.body.style.backgroundColor = '#07090e';
+    window.scrollTo(0, 0);
+    if (!window.location.hash.startsWith('#rewind')) {
+      history.replaceState(null, '', `#rewind/${activeTab || 'home'}`);
+    }
     if (navRewindRadio) navRewindRadio.classList.add('active');
     if (navDownloader) navDownloader.classList.remove('active');
   } else {
@@ -167,6 +172,7 @@ export function switchView(targetView) {
     if (downloaderView) downloaderView.style.display = 'flex';
     if (headerNav) headerNav.style.display = 'flex';
     document.body.classList.remove('rewind-active');
+    document.body.classList.remove('rr-nowplaying-active');
     document.body.style.backgroundColor = '';
     if (navRewindRadio) navRewindRadio.classList.remove('active');
     if (navDownloader) navDownloader.classList.add('active');
@@ -189,13 +195,35 @@ const SPA_VIEWS = {
 };
 
 export function switchMusicTab(tabName, options = {}) {
+  if (!document.body.classList.contains('rewind-active')) {
+    switchView('rewind');
+  }
+
   const target = SPA_VIEWS[tabName] ? tabName : 'home';
+  if (target !== 'nowplaying') {
+    lastActiveTab = target;
+  }
   activeTab = target;
 
   if (options.pushHash !== false) {
     if (window.location.hash.startsWith('#rewind')) {
       history.replaceState(null, '', `#rewind/${target}`);
     }
+  }
+
+  const rewindView = document.getElementById('rewindRadioView');
+  if (target === 'nowplaying') {
+    document.body.classList.add('rr-nowplaying-active');
+    if (rewindView) rewindView.classList.add('nowplaying-mode');
+  } else {
+    document.body.classList.remove('rr-nowplaying-active');
+    if (rewindView) rewindView.classList.remove('nowplaying-mode');
+    const npLayout = document.querySelector('.rr-np-layout');
+    if (npLayout) npLayout.classList.remove('mobile-lyrics-open');
+    const npWrapper = document.querySelector('.rr-nowplaying-wrapper');
+    if (npWrapper) npWrapper.classList.remove('show-lyrics');
+    const npLyricsToggle = document.getElementById('rrNpMobileLyricsToggle');
+    if (npLyricsToggle) npLyricsToggle.classList.remove('active');
   }
 
   // Update navigation button active states
@@ -1317,12 +1345,16 @@ function renderNowPlayingView() {
   const scrubFill = document.getElementById('rrNpScrubFill');
   const playBtn = document.getElementById('rrNpPlayBtn');
   const likeBtn = document.getElementById('rrNpLikeBtn');
+  const shuffleBtn = document.getElementById('rrNpShuffleBtn');
+  const repeatBtn = document.getElementById('rrNpRepeatBtn');
+  const badgeText = document.getElementById('rrNpBadgeText');
   const providerText = document.getElementById('rrNpProviderText');
   const extLink = document.getElementById('rrNpExternalLink');
 
   if (artImg) artImg.src = currentTrack.artworkHigh || currentTrack.artwork;
   if (titleEl) titleEl.textContent = currentTrack.title;
   if (artistEl) artistEl.textContent = currentTrack.artist;
+  if (badgeText) badgeText.textContent = (currentTrack.album ? `PLAYING FROM ${currentTrack.album}` : 'PLAYING FROM REWIND DISCOVERY').toUpperCase();
   if (curTime) curTime.textContent = formatTime(currentTimeSec);
   if (durTime) durTime.textContent = formatTime(durationSec);
 
@@ -1338,9 +1370,11 @@ function renderNowPlayingView() {
   if (playBtn) {
     playBtn.innerHTML = isPlaying
       ? '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
-      : '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      : '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
   }
   if (likeBtn) likeBtn.classList.toggle('liked', recommendationService.isLiked(currentTrack.id));
+  if (shuffleBtn) shuffleBtn.classList.toggle('active', isShuffle);
+  if (repeatBtn) repeatBtn.classList.toggle('active', repeatMode !== 'off');
 
   if (providerText) {
     providerText.textContent = currentTrack.provider === 'spotify' ? 'Spotify Music' : 'YouTube Audio Stream';
@@ -1873,15 +1907,18 @@ function updatePlayerUIState() {
 
   const playSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 19 12 6 20 6 4"/></svg>';
   const pauseSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  const npPlaySvg = '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+  const npPauseSvg = '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   const quickPlaySvg = '<svg class="di-quick-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6 4 19 12 6 20 6 4"/></svg>';
   const quickPauseSvg = '<svg class="di-quick-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
 
   if (bottomPlayBtn) bottomPlayBtn.innerHTML = isPlaying ? pauseSvg : playSvg;
-  if (fullPlayBtn) fullPlayBtn.innerHTML = isPlaying ? pauseSvg : playSvg;
   if (diQuickPlayBtn) diQuickPlayBtn.innerHTML = isPlaying ? quickPauseSvg : quickPlaySvg;
   if (diHeroPlayBtn) diHeroPlayBtn.innerHTML = isPlaying ? pauseSvg : playSvg;
   const npPlayBtn = document.getElementById('rrNpPlayBtn');
-  if (npPlayBtn) npPlayBtn.innerHTML = isPlaying ? pauseSvg : playSvg;
+  if (npPlayBtn) npPlayBtn.innerHTML = isPlaying ? npPauseSvg : npPlaySvg;
+
+  document.body.classList.toggle('rr-audio-playing', isPlaying);
 
   if (diWaveform) diWaveform.classList.toggle('playing', isPlaying);
   if (diWaveformLarge) diWaveformLarge.classList.toggle('playing', isPlaying);
@@ -2110,6 +2147,9 @@ export async function initRewindRadio() {
   if (catalogTracks.length > 0) {
     const initialTrack = catalogTracks[0];
     updateTrackMetaUI(initialTrack);
+    if (activeTab === 'nowplaying') {
+      renderNowPlayingView();
+    }
   }
 
   // Large Vintage Cassette Click to Play/Pause
@@ -2143,21 +2183,28 @@ export async function initRewindRadio() {
     });
   });
 
-  // Mobile Bottom Navigation Handlers
-  const mobHome = document.getElementById('rrMobNavHome');
-  const mobSearch = document.getElementById('rrMobNavSearch');
-  const mobLib = document.getElementById('rrMobNavLibrary');
-  const mobDownloader = document.getElementById('rrMobNavDownloader');
-
-  if (mobHome) mobHome.addEventListener('click', () => switchMusicTab('home'));
-  if (mobSearch) mobSearch.addEventListener('click', () => switchMusicTab('search'));
-  if (mobLib) mobLib.addEventListener('click', () => switchMusicTab('library'));
-  if (mobDownloader) mobDownloader.addEventListener('click', () => switchView('downloader'));
+  // Mobile Bottom Navigation Handlers (All buttons wired dynamically via data-tab)
+  document.querySelectorAll('.mob-nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = btn.getAttribute('data-tab');
+      if (tab) {
+        switchMusicTab(tab);
+      } else if (btn.id === 'rrMobNavDownloader') {
+        switchView('downloader');
+      }
+    });
+  });
 
   // Switch to Downloader from Desktop Header
   const switchDownloaderBtn = document.getElementById('rrSwitchDownloaderBtn');
   if (switchDownloaderBtn) {
     switchDownloaderBtn.addEventListener('click', () => switchView('downloader'));
+  }
+
+  const brandBadge = document.getElementById('rrBrandBadge');
+  if (brandBadge) {
+    brandBadge.addEventListener('click', () => switchMusicTab('home'));
   }
 
   // Header Nav Bar Switches (Top level OMNI header)
@@ -2363,7 +2410,20 @@ export async function initRewindRadio() {
   const npScrubSlider = document.getElementById('rrNpScrubSlider');
   const npQueueBtn = document.getElementById('rrNpQueueBtn');
 
-  if (npBackBtn) npBackBtn.addEventListener('click', () => switchMusicTab('home'));
+  const npMobileLyricsToggle = document.getElementById('rrNpMobileLyricsToggle');
+
+  if (npBackBtn) npBackBtn.addEventListener('click', () => switchMusicTab(lastActiveTab || 'home'));
+  if (npMobileLyricsToggle) {
+    npMobileLyricsToggle.addEventListener('click', () => {
+      const npLayout = document.querySelector('.rr-np-layout');
+      const npWrapper = document.querySelector('.rr-nowplaying-wrapper');
+      if (npLayout) {
+        const isShowing = npLayout.classList.toggle('mobile-lyrics-open');
+        if (npWrapper) npWrapper.classList.toggle('show-lyrics', isShowing);
+        npMobileLyricsToggle.classList.toggle('active', isShowing);
+      }
+    });
+  }
   if (npPlayBtn) npPlayBtn.addEventListener('click', togglePlayPause);
   if (npPrevBtn) npPrevBtn.addEventListener('click', playPrevTrack);
   if (npNextBtn) npNextBtn.addEventListener('click', playNextTrack);
@@ -2437,33 +2497,38 @@ export async function initRewindRadio() {
   }
 
   // ------------------------------------------------------------------------
-  // FULL SCREEN PLAYER MODAL
+  // FULL SCREEN PLAYER MODAL / NOW PLAYING PAGE
   // ------------------------------------------------------------------------
   const openFullPlayer = () => {
+    switchView('rewind');
     switchMusicTab('nowplaying');
+    window.scrollTo(0, 0);
   };
+
+  const bottomPlayer = document.getElementById('rrBottomPlayer');
+  if (bottomPlayer) {
+    bottomPlayer.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+      openFullPlayer();
+    });
+  }
 
   const playerLeft = document.getElementById('rrPlayerLeft');
   const playerExpandBtn = document.getElementById('rrPlayerExpandBtn');
-  if (playerLeft) playerLeft.addEventListener('click', openFullPlayer);
-  if (playerExpandBtn) playerExpandBtn.addEventListener('click', openFullPlayer);
+  if (playerLeft) {
+    playerLeft.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      e.stopPropagation();
+      openFullPlayer();
+    });
+  }
+  if (playerExpandBtn) {
+    playerExpandBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openFullPlayer();
+    });
+  }
 
-  const fullCloseBtn = document.getElementById('rrFullCloseBtn');
-  const fullBackdrop = document.getElementById('rrFullBackdrop');
-  if (fullCloseBtn) {
-    fullCloseBtn.addEventListener('click', () => {
-      const fullModal = document.getElementById('rrFullPlayerModal');
-      if (fullModal) fullModal.classList.remove('open');
-      switchMusicTab('home');
-    });
-  }
-  if (fullBackdrop) {
-    fullBackdrop.addEventListener('click', () => {
-      const fullModal = document.getElementById('rrFullPlayerModal');
-      if (fullModal) fullModal.classList.remove('open');
-      switchMusicTab('home');
-    });
-  }
 
   const fullPlayBtn = document.getElementById('rrFullPlayBtn');
   const fullNextBtn = document.getElementById('rrFullNextBtn');
@@ -2643,14 +2708,16 @@ export async function initRewindRadio() {
     } else if (e.code === 'Escape') {
       const collModal = document.getElementById('rrCollectionSheet');
       if (isDynamicIslandExpanded) collapseDynamicIsland();
-      if (collModal && collModal.classList.contains('open')) collModal.classList.remove('open');
-      if (queueDrawer && queueDrawer.classList.contains('open')) queueDrawer.classList.remove('open');
+      else if (collModal && collModal.classList.contains('open')) collModal.classList.remove('open');
+      else if (queueDrawer && queueDrawer.classList.contains('open')) queueDrawer.classList.remove('open');
+      else if (activeTab === 'nowplaying') switchMusicTab(lastActiveTab || 'home');
     }
   });
 
   // Expose methods for SPA global router and interaction
   if (typeof window !== 'undefined') {
     window.switchMusicTab = switchMusicTab;
+    window.openFullPlayer = openFullPlayer;
     window.executeDynamicSearch = executeDynamicSearch;
     window.expandDynamicIsland = expandDynamicIsland;
     window.collapseDynamicIsland = collapseDynamicIsland;
