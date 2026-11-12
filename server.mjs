@@ -4,7 +4,14 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { WebSocketServer } from 'ws';
+
+let WebSocketServer = null;
+try {
+  const wsMod = await import('ws');
+  WebSocketServer = wsMod.WebSocketServer || wsMod.default?.WebSocketServer;
+} catch (e) {
+  console.warn('[Server] Optional "ws" module not available; real-time presence running in HTTP polling mode.');
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -2268,9 +2275,10 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------
 // WebSocket Server for Rewind Radio Real-Time Presence & Activity
 // --------------------------------------------------------------------------
-const wss = new WebSocketServer({ noServer: true });
+const wss = WebSocketServer ? new WebSocketServer({ noServer: true }) : null;
 
-wss.on('connection', (ws, req) => {
+if (wss) {
+  wss.on('connection', (ws, req) => {
   let clientSessionId = null;
 
   try {
@@ -2354,8 +2362,13 @@ wss.on('connection', (ws, req) => {
   ws.on('close', handleDisconnect);
   ws.on('error', handleDisconnect);
 });
+}
 
 server.on('upgrade', (req, socket, head) => {
+  if (!wss) {
+    socket.destroy();
+    return;
+  }
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (parsedUrl.pathname === '/ws/presence' || parsedUrl.pathname === '/ws') {
     wss.handleUpgrade(req, socket, head, (ws) => {

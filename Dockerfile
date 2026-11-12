@@ -15,12 +15,12 @@ RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o 
 
 WORKDIR /app
 
-# Copy application files
-COPY package.json ./
-COPY server.mjs ./
-COPY index.html ./
-COPY styles.css ./
-COPY app.js ./
+# Copy package manifests and install production dependencies
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copy application source files
+COPY . .
 
 # Set environment variables
 ENV NODE_ENV=production

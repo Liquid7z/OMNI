@@ -6,7 +6,8 @@
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
-    "dev": "node --watch server.mjs"
+    "dev": "node --watch server.mjs",
+    "build": "echo 'Build complete'"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -22,6 +23,8 @@
     "webgl"
   ],
   "author": "OMNI",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.22.2"
+  }
 }
-
